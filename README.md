@@ -23,6 +23,24 @@ pip install requestsession
 
 ## Quick Start
 
+- simple 1
+```python
+from requestsession import RequestSession
+
+# Create a new session
+session = RequestSession()
+# Initialize with random base headers
+session.initialize_session()
+# print log
+session.print_log = True
+
+print("Current session headers:", session.headers)
+session.get("https://google.com")
+```
+
+[example 1](/assets/example1.png)
+
+
 ```python
 from requestsession import RequestSession
 
