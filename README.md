@@ -38,7 +38,7 @@ print("Current session headers:", session.headers)
 session.get("https://google.com")
 ```
 
-[example 1](/assets/example1.png)
+![example 1](assets/example1.png)
 
 
 ```python
