@@ -2,9 +2,9 @@
 
 一个功能强大的 Python requests 会话封装库，提供代理管理、会话持久化和请求日志记录等高级功能。
 
-[![PyPI version](https://img.shields.io/pypi/v/requestsession.svg)](https://pypi.org/project/requestsession/)
-[![Python versions](https://img.shields.io/pypi/pyversions/requestsession.svg)](https://pypi.org/project/requestsession/)
-[![License](https://img.shields.io/github/license/yourusername/requestsession.svg)](https://github.com/yourusername/requestsession/blob/main/LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/rqsession.svg)](https://pypi.org/project/rqsession/)
+[![Python versions](https://img.shields.io/pypi/pyversions/rqsession.svg)](https://pypi.org/project/rqsession/)
+[![License](https://img.shields.io/github/license/yourusername/rqsession.svg)](https://github.com/yourusername/rqsession/blob/main/LICENSE)
 
 ## 特性
 
@@ -18,13 +18,13 @@
 ## 安装
 
 ```bash
-pip install requestsession
+pip install rqsession
 ```
 
 ## 快速开始
 
 ```python
-from requestsession import RequestSession
+from rqsession import RequestSession
 
 # 创建新会话
 session = RequestSession()

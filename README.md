@@ -2,9 +2,9 @@
 
 A powerful Python requests session wrapper with advanced features for proxy management, session persistence, and request logging.
 
-[![PyPI version](https://img.shields.io/pypi/v/requestsession.svg)](https://pypi.org/project/requestsession/)
-[![Python versions](https://img.shields.io/pypi/pyversions/requestsession.svg)](https://pypi.org/project/requestsession/)
-[![License](https://img.shields.io/github/license/yourusername/requestsession.svg)](https://github.com/yourusername/requestsession/blob/main/LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/rqsession.svg)](https://pypi.org/project/rqsession/)
+[![Python versions](https://img.shields.io/pypi/pyversions/rqsession.svg)](https://pypi.org/project/rqsession/)
+[![License](https://img.shields.io/github/license/yourusername/rqsession.svg)](https://github.com/yourusername/rqsession/blob/main/LICENSE)
 
 ## Features
 
@@ -21,14 +21,14 @@ These features make RequestSession an ideal tool for web scraping, API testing, 
 ## Installation
 
 ```bash
-pip install requestsession
+pip install rqsession
 ```
 
 ## Quick Start
 
 - simple 1
 ```python
-from requestsession import RequestSession
+from rqsession import RequestSession
 
 # Create a new session
 session = RequestSession()
@@ -45,7 +45,7 @@ session.get("https://google.com")
 
 
 ```python
-from requestsession import RequestSession
+from rqsession import RequestSession
 
 # Create a new session
 session = RequestSession()

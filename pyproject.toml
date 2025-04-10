@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "requestsession"
+name = "rqsession"
 version = "0.1.0"
 description = "Python requests session wrapper with advanced features for proxy management, session persistence, cookies auto update and request logging."
 authors = ["leftmonster"]
