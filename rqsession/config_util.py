@@ -15,7 +15,7 @@ def base_dir_path() -> Path:
     return application_path
 
 def get_config_ini() -> configparser.ConfigParser:
-    config_path = base_dir_path().joinpath("requestsession", "config.ini")
+    config_path = base_dir_path().joinpath("rqsession", "config.ini")
     c = configparser.ConfigParser()
     c.read(config_path)
     return c
