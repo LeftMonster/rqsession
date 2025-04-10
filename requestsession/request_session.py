@@ -16,7 +16,6 @@ from .config_util import get_config_ini
 
 
 base_config = get_config_ini()
-
 # 默认配置
 DEFAULT_CONFIG = {
     "host": base_config["RequestSession"]["host"],
