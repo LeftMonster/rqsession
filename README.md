@@ -8,12 +8,15 @@ A powerful Python requests session wrapper with advanced features for proxy mana
 
 ## Features
 
-- 🌐 **Proxy Management**: Easy configuration of proxies with support for random rotation
-- 💾 **Session Persistence**: Save and load sessions with cookies and headers
-- 📝 **Comprehensive Logging**: Detailed request and response tracking
-- 🍪 **Advanced Cookie Handling**: Domain-based cookie management
-- 🔄 **Request History**: Track all requests with detailed metadata
-- 🔧 **Auto Headers**: Automatic configuration of common headers like Host, Referer, and Origin
+- 🌐 Proxy Management: Easy configuration of proxies with support for random rotation or fixed proxy per session
+- 💾 Session Persistence: Save and load sessions with cookies and headers, eliminating repetitive setup
+- 📝 Comprehensive Logging: Detailed request and response tracking with intelligent formatting and visualization
+- 🍪 Advanced Cookie Handling: Automatic domain-based cookie management and updates across different domains
+- 🔄 Request History: Track all requests with detailed metadata and exportable request chains for analysis
+- 🔧 Auto Headers: Automatic configuration of common headers like Host, Referer, and Origin, preventing resource access issues across different domains
+- 🚀 Simplified Workflow: Eliminates the hassle of manually building request signatures and managing session state
+
+These features make RequestSession an ideal tool for web scraping, API testing, and automated browsing tasks where consistency and detailed tracking are essential.
 
 ## Installation
 
