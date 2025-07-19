@@ -1,10 +1,23 @@
 # RequestSession
 
 一个功能强大的 Python requests 会话封装库，提供代理管理、会话持久化和请求日志记录等高级功能。
+高级HTTP请求会话管理库，支持代理管理、会话持久化、TLS指纹伪造和反检测功能。
 
 [![PyPI version](https://img.shields.io/pypi/v/rqsession.svg)](https://pypi.org/project/rqsession/)
 [![Python versions](https://img.shields.io/pypi/pyversions/rqsession.svg)](https://pypi.org/project/rqsession/)
 [![License](https://img.shields.io/github/license/yourusername/rqsession.svg)](https://github.com/yourusername/rqsession/blob/main/LICENSE)
+
+
+## 🚀 快速安装
+
+```bash
+# 基础安装
+pip install rqsession
+
+# 包含Rust后端的完整安装
+pip install rqsession[rust]
+```
+
 
 ## 特性
 
@@ -43,6 +56,39 @@ session.save_session(_id="my_session")
 
 # 加载已保存的会话
 loaded_session = RequestSession.load_session("tmp/http_session/my_session.json")
+```
+
+## 基础用法
+
+### 📖 Python导入使用
+```python
+from rqsession import EnhancedRequestSession
+
+# 增强型过TLS/JA3检测等
+session = EnhancedRequestSession(
+    browser_profile="chrome_119_windows",
+    enable_tls_fingerprinting=True
+)
+
+# ... 参考requests.Session
+response = session.get("https://example.com")
+print(f"Status: {response.status_code}")
+
+# 获取指纹信息
+fingerprint = session.get_fingerprint_info()
+if fingerprint:
+    print(f"JA3 Hash: {fingerprint.ja3_hash}")
+
+```
+
+### 🔧 启动Rust代理端
+```bash
+# 方式1：命令行启动
+rqsession-server
+
+# 方式2：手动启动
+cd rust
+cargo run --release
 ```
 
 ## 高级用法
