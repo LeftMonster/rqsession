@@ -289,17 +289,18 @@ class EnhancedRequestSession(requests.Session):
             start_time = time.time()
 
             # 修复：检查Rust后端是否可用
-            try:
-                health_check = requests.get(
-                    f"{self.rust_backend_url}/health",
-                    timeout=5
-                )
-                if health_check.status_code != 200:
-                    raise requests.exceptions.RequestException("Rust backend health check failed")
-            except requests.exceptions.RequestException as e:
-                _logger.warning(f"Rust backend not available: {e}")
-                _logger.info("Falling back to standard request method")
-                return self._send_standard(request, **kwargs)
+            # 因为性能效率原因、暂时停用heartbeat
+            # try:
+            #     health_check = requests.get(
+            #         f"{self.rust_backend_url}/health",
+            #         timeout=5
+            #     )
+            #     if health_check.status_code != 200:
+            #         raise requests.exceptions.RequestException("Rust backend health check failed")
+            # except requests.exceptions.RequestException as e:
+            #     _logger.warning(f"Rust backend not available: {e}")
+            #     _logger.info("Falling back to standard request method")
+            #     return self._send_standard(request, **kwargs)
 
             backend_response = requests.post(
                 f"{self.rust_backend_url}/advanced_fetch",
@@ -372,6 +373,8 @@ class EnhancedRequestSession(requests.Session):
                 requests.Request('GET', original_url),
                 response.raw
             )
+        cks = self._safe_extract_cookies(response, response.cookies)
+        self.cookies.update(cks)
 
         return response
 
@@ -711,6 +714,43 @@ class EnhancedRequestSession(requests.Session):
 
         _logger.info(f"Session data loaded from: {filepath}")
         return session
+
+    def _safe_extract_cookies(self, response, cks_dict):
+        """
+        安全地提取cookies，避免解析错误
+        将响应获得的完整的cookie数据对当前对象写入
+        """
+        try:
+            # 方法1: 从response.cookies提取（推荐）
+            if hasattr(response, 'cookies') and response.cookies:
+                for cookie in response.cookies:
+                    cks_dict[cookie.name] = cookie.value
+                    # print(f"Cookie extracted: {cookie.name} = {cookie.value[:50]}...")
+
+            # 方法2: 从headers提取Set-Cookie（备用）
+            set_cookie_headers = response.headers.get('Set-Cookie', [])
+            if isinstance(set_cookie_headers, str):
+                set_cookie_headers = [set_cookie_headers]
+            elif set_cookie_headers is None:
+                set_cookie_headers = []
+
+            for cookie_header in set_cookie_headers:
+                if isinstance(cookie_header, str) and '=' in cookie_header:
+                    # 正确的cookie解析：只在第一个=处分割
+                    parts = cookie_header.split(';')[0]  # 只取cookie值部分，忽略属性
+                    if '=' in parts:
+                        name, value = parts.split('=', 1)  # 只分割一次
+                        name = name.strip()
+                        value = value.strip()
+                        if name and name not in cks_dict:  # 避免重复
+                            cks_dict[name] = value
+                            # print(f"Set-Cookie extracted: {name} = {value[:50]}...")
+
+        except Exception as e:
+            print(f"Cookie extraction error: {e}")
+            # 如果cookie提取失败，不要中断程序
+
+        return cks_dict
 
 
 # 使用示例
