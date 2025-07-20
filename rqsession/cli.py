@@ -30,7 +30,7 @@ def start_rust_server():
             subprocess.run(["cargo", "build", "--release"],
                            cwd=rust_dir, check=True)
 
-        print("✅ Starting server on http://127.0.0.1:5005")
+        print("✅ Starting server on http://0.0.0.0:5005")
         subprocess.run([str(binary_path)], cwd=rust_dir)
 
     except subprocess.CalledProcessError as e:
@@ -57,7 +57,7 @@ def main():
     if args.command == "server":
         return start_rust_server()
     elif args.command == "test":
-        from .test_session import run_tests
+        from tests.test_session import run_tests
         return run_tests()
     else:
         parser.print_help()
