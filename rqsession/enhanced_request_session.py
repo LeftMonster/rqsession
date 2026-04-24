@@ -65,7 +65,346 @@ class EnhancedRequestSession(requests.Session):
             "accept_language": "en-US,en;q=0.9",
             "sec_ch_ua": None,  # Safari没有这些头
             "sec_ch_ua_platform": None,
-        }
+        },
+        # ================= Chrome系列 =================
+
+        "chrome_120_windows": {
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            "sec_ch_ua_platform": '"Windows"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        "chrome_120_macos": {
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            "sec_ch_ua_platform": '"macOS"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        "chrome_118_linux": {
+            "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
+            "sec_ch_ua_platform": '"Linux"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        # ================= Firefox系列 =================
+
+        "firefox_120_windows": {
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept_language": "en-US,en;q=0.5",
+            "accept_encoding": "gzip, deflate, br",
+            "sec_ch_ua": None,  # Firefox没有这些头
+            "sec_ch_ua_platform": None,
+            "sec_ch_ua_mobile": None,
+            "cache_control": None,
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        "firefox_120_macos": {
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:120.0) Gecko/20100101 Firefox/120.0",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept_language": "en-US,en;q=0.5",
+            "accept_encoding": "gzip, deflate, br",
+            "sec_ch_ua": None,
+            "sec_ch_ua_platform": None,
+            "sec_ch_ua_mobile": None,
+            "cache_control": None,
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        "firefox_115_linux": {
+            "user_agent": "Mozilla/5.0 (X11; Linux x86_64; rv:115.0) Gecko/20100101 Firefox/115.0",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept_language": "en-US,en;q=0.5",
+            "accept_encoding": "gzip, deflate, br",
+            "sec_ch_ua": None,
+            "sec_ch_ua_platform": None,
+            "sec_ch_ua_mobile": None,
+            "cache_control": None,
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        # ================= Safari系列 =================
+
+        "safari_17_1_macos": {
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br",
+            "sec_ch_ua": None,  # Safari没有这些头
+            "sec_ch_ua_platform": None,
+            "sec_ch_ua_mobile": None,
+            "cache_control": "max-age=0",
+            # "dnt": None,
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": None,
+            "sec_fetch_mode": None,
+            "sec_fetch_site": None,
+            "sec_fetch_user": None,
+        },
+
+        "safari_16_6_macos": {
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br",
+            "sec_ch_ua": None,
+            "sec_ch_ua_platform": None,
+            "sec_ch_ua_mobile": None,
+            "cache_control": "max-age=0",
+            # "dnt": None,
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": None,
+            "sec_fetch_mode": None,
+            "sec_fetch_site": None,
+            "sec_fetch_user": None,
+        },
+
+        # ================= Edge系列 =================
+
+        "edge_120_windows": {
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Not_A Brand";v="8", "Chromium";v="120", "Microsoft Edge";v="120"',
+            "sec_ch_ua_platform": '"Windows"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        # ================= 移动端浏览器 =================
+
+        "chrome_mobile_android": {
+            "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            "sec_ch_ua_platform": '"Android"',
+            "sec_ch_ua_mobile": "?1",  # 移动端
+            "cache_control": "max-age=0",
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        "safari_mobile_ios": {
+            "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br",
+            "sec_ch_ua": None,  # iOS Safari没有这些头
+            "sec_ch_ua_platform": None,
+            "sec_ch_ua_mobile": None,
+            "cache_control": "max-age=0",
+            # "dnt": None,
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": None,
+            "sec_fetch_mode": None,
+            "sec_fetch_site": None,
+            "sec_fetch_user": None,
+        },
+
+        # ================= 特殊版本/定制浏览器 =================
+
+        "brave_120_windows": {
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            # Brave隐藏身份
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Not_A Brand";v="8", "Chromium";v="120", "Brave";v="120"',
+            "sec_ch_ua_platform": '"Windows"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # "dnt": "1",  # Brave默认启用DNT
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        "opera_105_windows": {
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 OPR/105.0.0.0",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Opera";v="105", "Chromium";v="119", "Not?A_Brand";v="24"',
+            "sec_ch_ua_platform": '"Windows"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        # ================= 地区/语言变体 =================
+
+        "chrome_120_windows_de": {  # 德语版Chrome
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "de-DE,de;q=0.9,en;q=0.8",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            "sec_ch_ua_platform": '"Windows"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        "chrome_120_windows_fr": {  # 法语版Chrome
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "fr-FR,fr;q=0.9,en;q=0.8",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            "sec_ch_ua_platform": '"Windows"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        "chrome_120_windows_zh": {  # 中文版Chrome
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "zh-CN,zh;q=0.9,en;q=0.8",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            "sec_ch_ua_platform": '"Windows"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        # ================= 旧版本浏览器 =================
+
+        "chrome_110_windows": {  # 较旧版本Chrome
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br",
+            "sec_ch_ua": '"Chromium";v="110", "Not A(Brand";v="24", "Google Chrome";v="110"',
+            "sec_ch_ua_platform": '"Windows"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        "firefox_102_windows": {  # 较旧版本Firefox
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept_language": "en-US,en;q=0.5",
+            "accept_encoding": "gzip, deflate, br",
+            "sec_ch_ua": None,
+            "sec_ch_ua_platform": None,
+            "sec_ch_ua_mobile": None,
+            "cache_control": None,
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
+
+        "chrome_138_windows": {
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept_language": "en-US,en;q=0.9",
+            "accept_encoding": "gzip, deflate, br, zstd",
+            "sec_ch_ua": '"Not_A Brand";v="8", "Chromium";v="136", "Google Chrome";v="136"',
+            "sec_ch_ua_platform": '"Windows"',
+            "sec_ch_ua_mobile": "?0",
+            "cache_control": "max-age=0",
+            # "dnt": "1",
+            "upgrade_insecure_requests": "1",
+            "sec_fetch_dest": "document",
+            "sec_fetch_mode": "navigate",
+            "sec_fetch_site": "none",
+            "sec_fetch_user": "?1",
+        },
     }
 
     def __init__(self,
@@ -236,8 +575,8 @@ class EnhancedRequestSession(requests.Session):
                 request.headers["Origin"] = f"{url_obj.scheme}://{url_obj.netloc}"
 
         # 添加随机化的DNT头
-        if "DNT" not in request.headers and random.random() < 0.6:
-            request.headers["DNT"] = "1"
+        # if "DNT" not in request.headers and random.random() < 0.6:
+        #     request.headers["DNT"] = "1"
 
     def send(self, request, **kwargs):
         """重写send方法，使用增强的Rust后端"""
@@ -757,31 +1096,58 @@ class EnhancedRequestSession(requests.Session):
 if __name__ == "__main__":
     # 创建增强版会话
     session = EnhancedRequestSession(
-        browser_profile="chrome_119_windows",
+        browser_profile="chrome_138_windows",
         enable_tls_fingerprinting=True,
         enable_timing_simulation=True,
         enable_header_randomization=True,
+        rust_backend_url="http://127.0.0.1:5005"
     )
 
     # 测试基础功能
     print("Testing basic functionality...")
     # response = session.get("https://httpbin.org/get")
     # response = session.get("https://www.nflshop.com/")
+    # response = session.get("https://www.browserscan.net/zh/tls")
+    response = session.get("https://api.ja3.me/v1/search?query=Chrome")
+    _logger.info(f"Response: {response.status_code}")
+    _logger.info(f"Response: {response.headers}")
+    _logger.info(f"Response: {response.cookies}")
+    _logger.info(f"Response: {response.text}")
 
-    sensor_resp = session.post(
-        url="https://accounts.krafton.com/W2LH1-bIl8hFyohRUQ/bmV7zpNVpwhbNXE3/HFFCUAE/G14xR/Ac5WiUB",
-        json={
-            "sensor_data": "3;0;1;0;3289397;61QEzmHJiF3KwzF78L5e69hhi7vAjfNvdaNduDEwkWo=;9,1,0,0,3,18;\"\"]\"7JN\"T\"`%:,z(Kx*M9+K .BiyTQH?QSI0nOirEVn:x;nYEP=s->\"_\"Luy\"y2(y.c.|\"/3\"H\"{-!Y}/\"iDY6Fyq>wurLxi`vt/Blcrc`7f~#T|kV_ILGL4+]#6@yTNF`f,7[dsrmY-4M SU-I;OLLA,dBCZE  vFDf-Nk#%ycEQqJ}}c+x.?F%/hS^xa=JBf+Mb3Pml0mG`qiFI:PJdk(w XMU}nSen5U!Jx7[PhYH`~wJYg\"v\"~7/\"O\"\"~\"-`O\"zLnHb1HX80F\"S7SG\"@glqor0\"\"_,Et$VzV0g [X\"^V-\"s_lqBNw}IC\"=4f2\"X\"\"X\"I f\"*@QRH\"A13\"uAT(GZsx\"b-l\"9\"F-!/]\"L0>\"Zu`\"C:=[w\"`u\"-r.\"W)LC\"U\"ldG4\"1iz\"&j,\"i\"\"j\"OvV\"bMR\"aa{\":sG1dVaLzBV^Jo!$\"D:`8\"k\"\"N\"!d\"Tq\"4a^\"m\"5_8PcJ3G\"pFj\"(N)\"KTrX&IU\"f<+\"B\"!~)1Gh^?$l<2N~CAfW]w)t>`A)/&Ewkq]Q5x>ZM?ZhJ{of?6^SkQm[#SkX=bY9X1q&dSn@=(L\"F\"H-%\"*X|Mb\"T D/\"=\"53U\"K\"c$Z\"}\"X\"^oD\"xn9\"(\"@Co6<!+*@AZScPM~?AOmF2Z]VWA6~s7]m!LxrRzz*2R^qS^4hcyTybHH<TA?,rIy~/mPK;IWp.McfYj9 |4hCE-~%4&3}pJ13N#mgf-9Oi-CcSWE}5R+gTM^^fqunaGx8Q9v }MU7Goy?GX> >V=wpmz$AAUNP8u;G2),3XqKpI^y&> x.W- ! @@kh%$2jQw<7}7;g$_-[xK_$i^oF*t |HMt.EGUJ5^{{i-/l,m.z<o%77.[,qls$Ec%>af n_3bZ_#1d(r32S2:fXb.N_Kiy?])A^{13|P.1&FuRui5-O4N{!(U02)IN.J Gh*54<vLUW(@1jN,wS;P*|8kEJTj0_)izfsCKGzaeuMq^6/ef@~W%,?~Zgt1U:g@lIq51E j.3d(|Se8=opC!55&o|.T|V&fD%Il!9|fq0x=F }[cOHuZn%!ly#Z2wN,nQoDishKs4sH<0B+=zsK2NldXj%g=}SR!pIx6QN4[~pB>4MCC;7uj-K:=Z|[,yU_=%`Ag*)xL]U+F1M:UOP-!K|tu9SB~j_R>8r^!I>A|E@!|}13NLc95`7?>g?ziYHI0){c7Wa]6hVXhe,+I;TBM~RYa.f[2:43+(wY(XjsS&,u12Qq4COJJ{]czL&qeoXubwVT3ixy[8E>aV&?is)4:tWkyZ/-}0-<7M7?jZh(gGUDhxPf=Flpwh@exeJEA=CUa|{lOAVrPISQ%<i|cgHI`9%RfX4?@N^ z=28+p@OF0@M}=q=~;c`%kp,P9*.<SW+5P^bV@c,!p3:r4|KxLy2Q?/R$ztv}<^)?eh{ne0UaPn&_&r6~C$?[PU&aNDNj1J#5]n-vzJ~*wLaAdM!{F{9agwDkpk+Hs.Y}Pk(!!P/:>g-w?;m`&u6njyM#)<PcGd9l6Unyu^;LC}K8rUH7rd#ZZqJ1=Ai+^4t9w7_h{K4CW-WN*|gcD1nBRoH0>Gv8$Q(`@rCE`B*B^,aS/<&$jh>v,<4&8VtI$_E}f6[{8(x}B!^cEN/B (lKb%rh}4q?2nS3vR,;]LCg+sVO:DAQHKtg*SB@T{Q2$[`90bJa}vqGaM293ED?MP;)Apkj-ZB{]EP8(`Gv;82e#v`wx3 96O:%U2.,TyZEE61&pYHsF6N&IH2I;i`*06)}^.?:y:1u}gj]XI:l;@O0jV_xu;Al`(w~W(1D$TK$D8;?C/#L#AQ,_q_-1Yn;AhYe:t2E/bP?KXd^ycV?|9<+Wqr2:t~[a):;sg#>oOQPg_qx3.*]Tmz{Sa[/C(Dt~SYrR8bpnRUAYk$,NHK*{E_L;Pa1Ow? :d}1jc4WD#51Un(/QR]KJh&*s6Fp7vH$Fxw:%7X}q^urFO(-PfqaLzGKB_gMnY%d>w.LB=cA-2LNm-h|JGq`U@lcT~; M6kQ)g%>IK.TYJf~Io?[&Dd^Y2lprD`Kpe>6fHf<4IyVbi+Cw2j,a)JQC8hovPsiG8mb@!S!51 [ba6I0Z6V5Zu#;vKsvWolJF+.gLyMp Y@_h4NBfC#Z{EXbZ@OhLxkJQ;D/zQ{DOK4HR*X5]W5yJw -&r0X/W_ON6O-0qOh#yf!;o8.iX/&P8@ZR:^voTG,M5R2E{l#I=.L`T$qNJ,&M;Lqsd)JC~,#,}C+?{p=TaXr<zNP?>unW:K&&yUqbNQIor(q0xo6cgm<Z?|$muZV..Xyv&[0!qvs;5[]nXV(_pzBr_ML>I.0xr<gp~T6$}*Biu7?T58uW[gEhhVUVY_fTN!VWpH(,-APn1U_pv$W@Ql4vl]f_$q%|mV,G]>)/2DV~7jpH;F,k8C,njbih+)C*4oTq,t^hr4U*H{$XUcT7btfFELgi2%NOP?uAk?7@Z)Dy2r/Vf|ha0A2)--IMu*GQ`G%W|jgr/_0]!u1`g|!jGhWJ[Z(3gt;A^B7s5,0>X3Z4iNpHf/~ K)m]|1_l:X)-K4Bb3>:VwP|t@|TG_~x|X(&w:I}9k,Vc/.)^8E<m4q65^h0y<_ieP!%-Ah0Z1f4GlkgNz7<s5sPL3{UAf<<M8~yxHa9lI|Xs61H,t )m,(XY@@re9rz(eXi{FcFkS)^5LfzcCZhQ}iYU4>xz[/JeN&AZ(R3sP3k/g.7~}+G1_cFL=N#y]?S+c`x&^0v[F(o?o/AL-bzd85!1 @z#aJe,.#=^7]b97xn:!.JSKu=~lo[hp#v~]Qq?05]veA0ksYP#a)SWJ(MF*+1@JVVYH>k?94j:yQYDF,{cS\"D\" `*\"HHE7NZbJ\"~\"s*{\"jsA\"gaI8~Wg\"9<rTKBSVt.CIoXW,wt~_42n~avtp]W([t8j8M@Si)6^o  0aITyR!xrxx-|)z|N/C[I0)(O]5C{s?CD%s(?,piUmq&/9)1pOm,jOhyAI}Bm,ORVC.VmX9=IZ[{+A6F!n$G;,/Gr8sze$HTsODp,%kvu9Ceb+8B( >aPIaiB_ClO\"5\"EC9\"S:o-*\"I -\")7r]!;j\"\"uc~\"rk}\"?]PY#:?-\"<V\"|*H_zdn@bTfm\"a.v@\"$_y>GG~C@2\"]#B\"Zz$H5\"l1J=\"]1h_5xR7C~q\"Hy%}\"y\"F)C{3vVf/m&G_q^K\"1\"E.Z\"fd:Ymt`\"JiU~]{MGM1~&8l=vm`IE}q-ny;weelIlPvd ]0Rav^@PkA}iSS?=$vD)1]={FL/L;jEpf2fw1{[zB}VN9D0*x#Q.Sn_;nnQ iN:a_,h 93q>]L&}myflfp;-RwhP{9z@?+tI@l[j=0~Fo_9<8IEHLS:}Fxi^5P.l[L8w+Z2e2$%GyqVXYoky+ rk9pbc4LAw$fbOQ-vGfizEnoZhe)3TBSK?uIVY+U3*.swyga@cAMV9dbann*G[[umqBw*>lI<|*u+z.le?x00gOWBbl?Hei28.tP`|Pw&p x7.6$wR=LcC#7*Ac,Hj|AGEyx~6za``aY|y*%}oU\"v\"->1\"=g4dw.=A\"QpA\"-).@>U`g\"k9/\"8 ix)RaD_\"I_!\"C\"oQQy21?sCFf[n%(Yktn~8:^d=&>m./Y[/ jaZ^>Het[$@/n4mdF}F0[9uQyON{>/h:._hZ#Gi8.WqhmKp:`)B{CN+lMy1bX_/T%+Sa6QPe;Oban$&GS<YF#_;&ZEZ\")1_\")(J\"]\"\"m\"GXp\"sGQ/aS\"r_H0\"S\"z;C\"5&80L~Y:Z9a7)9iMfjD0V<:4#o`[?kjFz]@x)u=DY/S&dL9lxbp3C$@joC=v\"}\"kEt\"u1n{eIU\"c-D8+\"fU%\"XcQ\"i`5`,;\"q|)d)~a\"M\"$k*I6+Be!_&E~mUuvQ>eB;/([xm>BttP8T:1W%q\"|gZ\"[UM\"{ZC_2#\",A9f\"slP@{ZzLAGlA/Wre\"Y~ \"2{?bP/\"l\"&(_\"DMs\"_!}1P,%nx`7#\"0>,6\"V*K\",*d\"/~lyB\"`55\":cq^qz1;ld+lkIr0}\"zn]\"(\"~.\"T6b\"m;x~\"Yn.<aS&m\"D,Y\"N\"\"V\"NNQ\"yoG+AM%df\"s|\"7{Z\"vnF\"#\"\"9=$\"z?N\"zoHqFgU\"G8g-~B{Xv+AZIln-EJPM0&!G/c>*Nfc#:LcJ~>#8kycIAPUaObgoUs#\"4\"dZr\"gIcQLoHSIQ\")C`\"!C8Wh?\"=vqNx\"3@ZFo\"N{>\"6kOqf\"O?6T5%+\">` Tf1?I8:b5?7]pItd=}I$Mt`qGupd)<n&Ys?YxsfBsyyEi=qe>-_=g,05yEGPs$_zYy`c|.&lCNU%I*f^72lNwIE_E{(#GcGgFqQc9EB&p{#P~lAN(|aGpMcpV;MM#;(K+b9`6/M1{.C#VE--naM8qJVy`PZoDiM(eJ*C+0F>y?Y?iYXTCG1~Y?SzqMp+^0{I9x`0dv73~@b=~xo~cxqe>3HbjRm,o=2cc@0bHV}}k9RA%,y$(H57{d+_H?b$hB?st^U.r.^QOwK> 5z:=JDYNAV72+RsX?D|}sc?6[$.,`,!t$s7:SUnTW(gh]6[I;9$|l}WKvAJc/^bOgi+;Y^wf`5r!2`E\"m\"IP[\"gOrVT\";if\"TP{xM@\"PI\";\"\"/\"Ay%\"tgtUZ,Wty\"3D6H2\"w\"\"h\"O$i\"jLmt]\"j#.\"OItio\"ZFN\"J\")Dx(PW^F4RiI5\".\"3OO\"8\"\"IA4\"I5\"`tNnGQ)%\"}W,\"a\"MG]r9>WWlV:Z-|p-,c&e mz[k!qm7n\"3\"5Mk\"f!%9+z;_eG\"aN\" 8~J~9THE!B0}-\"[p.K\"K\"RIqGNNev]4o@\"C75\"QB#\"w\"~7\"tRd\"7B7J\" \"\"7\"+M6\"9ZIf2t/T\"yrU\"Zj\"UlO\"TM5\"EDi;p\"/]g\""},
+    exit()
+    # 创建增强版会话
+    session = EnhancedRequestSession(
+        browser_profile="chrome_138_windows",
+        enable_tls_fingerprinting=True,
+        enable_timing_simulation=True,
+        enable_header_randomization=True,
+        rust_backend_url="http://127.0.0.1:5005"
     )
-    print(sensor_resp.status_code)
-    print(sensor_resp.headers)
-    print(sensor_resp.text)
+
+    # 测试基础功能
+    print("Testing basic functionality...")
+    # response = session.get("https://httpbin.org/get")
+    # response = session.get("https://www.nflshop.com/")
+    response = session.get("https://accounts.krafton.com/login")
+    response = session.get("https://accounts.krafton.com/login")
+
+    # sensor_resp = session.post(url="https://www.nflshop.com/new-england-patriots/jerseys/t-25379296+d-2315662346+z-8-3918252576")
+    # sensor_resp = session.post(
+    #     url="https://accounts.krafton.com/W2LH1-bIl8hFyohRUQ/bmV7zpNVpwhbNXE3/HFFCUAE/G14xR/Ac5WiUB",
+    #     json={
+    #         "sensor_data": "3;0;1;0;3289397;61QEzmHJiF3KwzF78L5e69hhi7vAjfNvdaNduDEwkWo=;9,1,0,0,3,18;\"\"]\"7JN\"T\"`%:,z(Kx*M9+K .BiyTQH?QSI0nOirEVn:x;nYEP=s->\"_\"Luy\"y2(y.c.|\"/3\"H\"{-!Y}/\"iDY6Fyq>wurLxi`vt/Blcrc`7f~#T|kV_ILGL4+]#6@yTNF`f,7[dsrmY-4M SU-I;OLLA,dBCZE  vFDf-Nk#%ycEQqJ}}c+x.?F%/hS^xa=JBf+Mb3Pml0mG`qiFI:PJdk(w XMU}nSen5U!Jx7[PhYH`~wJYg\"v\"~7/\"O\"\"~\"-`O\"zLnHb1HX80F\"S7SG\"@glqor0\"\"_,Et$VzV0g [X\"^V-\"s_lqBNw}IC\"=4f2\"X\"\"X\"I f\"*@QRH\"A13\"uAT(GZsx\"b-l\"9\"F-!/]\"L0>\"Zu`\"C:=[w\"`u\"-r.\"W)LC\"U\"ldG4\"1iz\"&j,\"i\"\"j\"OvV\"bMR\"aa{\":sG1dVaLzBV^Jo!$\"D:`8\"k\"\"N\"!d\"Tq\"4a^\"m\"5_8PcJ3G\"pFj\"(N)\"KTrX&IU\"f<+\"B\"!~)1Gh^?$l<2N~CAfW]w)t>`A)/&Ewkq]Q5x>ZM?ZhJ{of?6^SkQm[#SkX=bY9X1q&dSn@=(L\"F\"H-%\"*X|Mb\"T D/\"=\"53U\"K\"c$Z\"}\"X\"^oD\"xn9\"(\"@Co6<!+*@AZScPM~?AOmF2Z]VWA6~s7]m!LxrRzz*2R^qS^4hcyTybHH<TA?,rIy~/mPK;IWp.McfYj9 |4hCE-~%4&3}pJ13N#mgf-9Oi-CcSWE}5R+gTM^^fqunaGx8Q9v }MU7Goy?GX> >V=wpmz$AAUNP8u;G2),3XqKpI^y&> x.W- ! @@kh%$2jQw<7}7;g$_-[xK_$i^oF*t |HMt.EGUJ5^{{i-/l,m.z<o%77.[,qls$Ec%>af n_3bZ_#1d(r32S2:fXb.N_Kiy?])A^{13|P.1&FuRui5-O4N{!(U02)IN.J Gh*54<vLUW(@1jN,wS;P*|8kEJTj0_)izfsCKGzaeuMq^6/ef@~W%,?~Zgt1U:g@lIq51E j.3d(|Se8=opC!55&o|.T|V&fD%Il!9|fq0x=F }[cOHuZn%!ly#Z2wN,nQoDishKs4sH<0B+=zsK2NldXj%g=}SR!pIx6QN4[~pB>4MCC;7uj-K:=Z|[,yU_=%`Ag*)xL]U+F1M:UOP-!K|tu9SB~j_R>8r^!I>A|E@!|}13NLc95`7?>g?ziYHI0){c7Wa]6hVXhe,+I;TBM~RYa.f[2:43+(wY(XjsS&,u12Qq4COJJ{]czL&qeoXubwVT3ixy[8E>aV&?is)4:tWkyZ/-}0-<7M7?jZh(gGUDhxPf=Flpwh@exeJEA=CUa|{lOAVrPISQ%<i|cgHI`9%RfX4?@N^ z=28+p@OF0@M}=q=~;c`%kp,P9*.<SW+5P^bV@c,!p3:r4|KxLy2Q?/R$ztv}<^)?eh{ne0UaPn&_&r6~C$?[PU&aNDNj1J#5]n-vzJ~*wLaAdM!{F{9agwDkpk+Hs.Y}Pk(!!P/:>g-w?;m`&u6njyM#)<PcGd9l6Unyu^;LC}K8rUH7rd#ZZqJ1=Ai+^4t9w7_h{K4CW-WN*|gcD1nBRoH0>Gv8$Q(`@rCE`B*B^,aS/<&$jh>v,<4&8VtI$_E}f6[{8(x}B!^cEN/B (lKb%rh}4q?2nS3vR,;]LCg+sVO:DAQHKtg*SB@T{Q2$[`90bJa}vqGaM293ED?MP;)Apkj-ZB{]EP8(`Gv;82e#v`wx3 96O:%U2.,TyZEE61&pYHsF6N&IH2I;i`*06)}^.?:y:1u}gj]XI:l;@O0jV_xu;Al`(w~W(1D$TK$D8;?C/#L#AQ,_q_-1Yn;AhYe:t2E/bP?KXd^ycV?|9<+Wqr2:t~[a):;sg#>oOQPg_qx3.*]Tmz{Sa[/C(Dt~SYrR8bpnRUAYk$,NHK*{E_L;Pa1Ow? :d}1jc4WD#51Un(/QR]KJh&*s6Fp7vH$Fxw:%7X}q^urFO(-PfqaLzGKB_gMnY%d>w.LB=cA-2LNm-h|JGq`U@lcT~; M6kQ)g%>IK.TYJf~Io?[&Dd^Y2lprD`Kpe>6fHf<4IyVbi+Cw2j,a)JQC8hovPsiG8mb@!S!51 [ba6I0Z6V5Zu#;vKsvWolJF+.gLyMp Y@_h4NBfC#Z{EXbZ@OhLxkJQ;D/zQ{DOK4HR*X5]W5yJw -&r0X/W_ON6O-0qOh#yf!;o8.iX/&P8@ZR:^voTG,M5R2E{l#I=.L`T$qNJ,&M;Lqsd)JC~,#,}C+?{p=TaXr<zNP?>unW:K&&yUqbNQIor(q0xo6cgm<Z?|$muZV..Xyv&[0!qvs;5[]nXV(_pzBr_ML>I.0xr<gp~T6$}*Biu7?T58uW[gEhhVUVY_fTN!VWpH(,-APn1U_pv$W@Ql4vl]f_$q%|mV,G]>)/2DV~7jpH;F,k8C,njbih+)C*4oTq,t^hr4U*H{$XUcT7btfFELgi2%NOP?uAk?7@Z)Dy2r/Vf|ha0A2)--IMu*GQ`G%W|jgr/_0]!u1`g|!jGhWJ[Z(3gt;A^B7s5,0>X3Z4iNpHf/~ K)m]|1_l:X)-K4Bb3>:VwP|t@|TG_~x|X(&w:I}9k,Vc/.)^8E<m4q65^h0y<_ieP!%-Ah0Z1f4GlkgNz7<s5sPL3{UAf<<M8~yxHa9lI|Xs61H,t )m,(XY@@re9rz(eXi{FcFkS)^5LfzcCZhQ}iYU4>xz[/JeN&AZ(R3sP3k/g.7~}+G1_cFL=N#y]?S+c`x&^0v[F(o?o/AL-bzd85!1 @z#aJe,.#=^7]b97xn:!.JSKu=~lo[hp#v~]Qq?05]veA0ksYP#a)SWJ(MF*+1@JVVYH>k?94j:yQYDF,{cS\"D\" `*\"HHE7NZbJ\"~\"s*{\"jsA\"gaI8~Wg\"9<rTKBSVt.CIoXW,wt~_42n~avtp]W([t8j8M@Si)6^o  0aITyR!xrxx-|)z|N/C[I0)(O]5C{s?CD%s(?,piUmq&/9)1pOm,jOhyAI}Bm,ORVC.VmX9=IZ[{+A6F!n$G;,/Gr8sze$HTsODp,%kvu9Ceb+8B( >aPIaiB_ClO\"5\"EC9\"S:o-*\"I -\")7r]!;j\"\"uc~\"rk}\"?]PY#:?-\"<V\"|*H_zdn@bTfm\"a.v@\"$_y>GG~C@2\"]#B\"Zz$H5\"l1J=\"]1h_5xR7C~q\"Hy%}\"y\"F)C{3vVf/m&G_q^K\"1\"E.Z\"fd:Ymt`\"JiU~]{MGM1~&8l=vm`IE}q-ny;weelIlPvd ]0Rav^@PkA}iSS?=$vD)1]={FL/L;jEpf2fw1{[zB}VN9D0*x#Q.Sn_;nnQ iN:a_,h 93q>]L&}myflfp;-RwhP{9z@?+tI@l[j=0~Fo_9<8IEHLS:}Fxi^5P.l[L8w+Z2e2$%GyqVXYoky+ rk9pbc4LAw$fbOQ-vGfizEnoZhe)3TBSK?uIVY+U3*.swyga@cAMV9dbann*G[[umqBw*>lI<|*u+z.le?x00gOWBbl?Hei28.tP`|Pw&p x7.6$wR=LcC#7*Ac,Hj|AGEyx~6za``aY|y*%}oU\"v\"->1\"=g4dw.=A\"QpA\"-).@>U`g\"k9/\"8 ix)RaD_\"I_!\"C\"oQQy21?sCFf[n%(Yktn~8:^d=&>m./Y[/ jaZ^>Het[$@/n4mdF}F0[9uQyON{>/h:._hZ#Gi8.WqhmKp:`)B{CN+lMy1bX_/T%+Sa6QPe;Oban$&GS<YF#_;&ZEZ\")1_\")(J\"]\"\"m\"GXp\"sGQ/aS\"r_H0\"S\"z;C\"5&80L~Y:Z9a7)9iMfjD0V<:4#o`[?kjFz]@x)u=DY/S&dL9lxbp3C$@joC=v\"}\"kEt\"u1n{eIU\"c-D8+\"fU%\"XcQ\"i`5`,;\"q|)d)~a\"M\"$k*I6+Be!_&E~mUuvQ>eB;/([xm>BttP8T:1W%q\"|gZ\"[UM\"{ZC_2#\",A9f\"slP@{ZzLAGlA/Wre\"Y~ \"2{?bP/\"l\"&(_\"DMs\"_!}1P,%nx`7#\"0>,6\"V*K\",*d\"/~lyB\"`55\":cq^qz1;ld+lkIr0}\"zn]\"(\"~.\"T6b\"m;x~\"Yn.<aS&m\"D,Y\"N\"\"V\"NNQ\"yoG+AM%df\"s|\"7{Z\"vnF\"#\"\"9=$\"z?N\"zoHqFgU\"G8g-~B{Xv+AZIln-EJPM0&!G/c>*Nfc#:LcJ~>#8kycIAPUaObgoUs#\"4\"dZr\"gIcQLoHSIQ\")C`\"!C8Wh?\"=vqNx\"3@ZFo\"N{>\"6kOqf\"O?6T5%+\">` Tf1?I8:b5?7]pItd=}I$Mt`qGupd)<n&Ys?YxsfBsyyEi=qe>-_=g,05yEGPs$_zYy`c|.&lCNU%I*f^72lNwIE_E{(#GcGgFqQc9EB&p{#P~lAN(|aGpMcpV;MM#;(K+b9`6/M1{.C#VE--naM8qJVy`PZoDiM(eJ*C+0F>y?Y?iYXTCG1~Y?SzqMp+^0{I9x`0dv73~@b=~xo~cxqe>3HbjRm,o=2cc@0bHV}}k9RA%,y$(H57{d+_H?b$hB?st^U.r.^QOwK> 5z:=JDYNAV72+RsX?D|}sc?6[$.,`,!t$s7:SUnTW(gh]6[I;9$|l}WKvAJc/^bOgi+;Y^wf`5r!2`E\"m\"IP[\"gOrVT\";if\"TP{xM@\"PI\";\"\"/\"Ay%\"tgtUZ,Wty\"3D6H2\"w\"\"h\"O$i\"jLmt]\"j#.\"OItio\"ZFN\"J\")Dx(PW^F4RiI5\".\"3OO\"8\"\"IA4\"I5\"`tNnGQ)%\"}W,\"a\"MG]r9>WWlV:Z-|p-,c&e mz[k!qm7n\"3\"5Mk\"f!%9+z;_eG\"aN\" 8~J~9THE!B0}-\"[p.K\"K\"RIqGNNev]4o@\"C75\"QB#\"w\"~7\"tRd\"7B7J\" \"\"7\"+M6\"9ZIf2t/T\"yrU\"Zj\"UlO\"TM5\"EDi;p\"/]g\""},
+    # )
+    # sensor_resp = requests.get(url="https://www.nflshop.com")
+    # print(sensor_resp.status_code)
+    # print(sensor_resp.headers)
+    # print(sensor_resp.text)
+    # exit()
 
     url = "https://accounts.krafton.com/auth/local"
 
     payload = {
-        "email": "xxx@xx.com",
-        "password": "dsadasdassda",
+        "email": "REDACTED_EMAIL",
+        "password": "REDACTED_PASSWORD",
         "trusted_device": False,
         "client_id": "local",
         "activationVersion": "v2"
