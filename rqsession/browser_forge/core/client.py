@@ -27,15 +27,17 @@ class BrowserClient:
     使用curl_cffi的ja3/akamai/extra_fp参数实现自定义指纹。
     """
 
-    # TODO: 支持的curl_cffi impersonate值列表，用于fallback
+    # curl_cffi 0.15 实际支持的 impersonate 值（通过 BrowserType 枚举确认）
     SUPPORTED_IMPERSONATE = [
         "chrome99", "chrome100", "chrome101", "chrome104", "chrome107",
         "chrome110", "chrome116", "chrome119", "chrome120", "chrome123",
-        "chrome124", "chrome126", "chrome127", "chrome128", "chrome129",
-        "chrome131", "chrome133",
+        "chrome124", "chrome131", "chrome133a", "chrome136", "chrome142",
+        "chrome145", "chrome146",
+        "chrome99_android", "chrome131_android",
         "safari15_3", "safari15_5", "safari17_0", "safari17_2_ios",
         "safari18_0", "safari18_0_ios",
-        "firefox109", "firefox117", "firefox120", "firefox133",
+        "firefox133", "firefox135", "firefox144", "firefox147",
+        "tor145",
         "edge99", "edge101",
     ]
 
@@ -391,11 +393,11 @@ class BrowserClient:
                     return impersonate
             return "chrome120"  # 默认
         elif "firefox" in name_lower:
-            return "firefox120"
+            return "firefox133"
         elif "safari" in name_lower:
             return "safari17_0"
         elif "edge" in name_lower:
-            return "chrome120"  # Edge基于Chromium
+            return "chrome136"  # Edge基于Chromium，用近似版本
 
         return "chrome120"  # 默认fallback
 

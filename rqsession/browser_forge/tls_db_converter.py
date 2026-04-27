@@ -26,7 +26,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any, Iterator
 
-from browser.browser_forge import BrowserClient
+from .core.client import BrowserClient
 from .profiles.models import (
     BrowserProfile, TlsConfig, H2Settings,
     HeaderProfile, BehaviorProfile
