@@ -3,13 +3,9 @@
 用于从真实浏览器中提取完整的指纹信息
 """
 import json
-import sys
 from pathlib import Path
 
-# 添加browser_forge到路径
-sys.path.insert(0, '/mnt/user-data/outputs')
-
-from browser_forge.profiles.models import (
+from .profiles.models import (
     BrowserProfile, TlsConfig, H2Settings,
     HeaderProfile, BehaviorProfile
 )

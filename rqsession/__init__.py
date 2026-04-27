@@ -7,7 +7,7 @@ RequestSession - 高级HTTP请求会话管理库
 支持代理管理、会话持久化、TLS指纹伪造和反检测
 """
 
-__version__ = "0.3.0"
+__version__ = "0.3.2"
 __author__ = "Sherlock"
 __email__ = "zhzhsgg@gmail.com"
 

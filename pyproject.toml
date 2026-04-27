@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rqsession"
-version = "0.3.1"
+version = "0.3.2"
 description = "Python requests session wrapper with advanced features for proxy management, session persistence, cookies auto update and request logging."
 authors = ["leftmonster"]
 readme = "README.md"
@@ -8,8 +8,35 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 requests = "^2.32.3"
+curl-cffi = ">=0.7.0"
 
+
+[project]
+name = "rqsession"
+version = "0.3.2"
+description = "Python requests session wrapper with advanced features for proxy management, session persistence, cookies auto update and request logging."
+authors = [
+    {name = "leftmonster", email = "zhzhsgg@gmail.com"}
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.32.3",
+    "curl-cffi>=0.7.0",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/sherlock/rqsession"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=61,<77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rqsession*"]

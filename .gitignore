@@ -5,3 +5,12 @@ rust/target/
 tmp/
 
 fc_rust_proxy/
+
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.idea/
+.claude/
+.venv/
+*.egg
