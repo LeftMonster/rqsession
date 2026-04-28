@@ -1,0 +1,68 @@
+{
+  "name": "edge142_windows",
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0",
+  "tls": {
+    "min_version": "1.2",
+    "max_version": "1.3",
+    "cipher_suites": [
+      "TLS_AES_128_GCM_SHA256",
+      "TLS_AES_256_GCM_SHA384",
+      "TLS_CHACHA20_POLY1305_SHA256",
+      "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+      "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+      "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+      "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+      "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+      "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+      "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+      "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+      "TLS_RSA_WITH_AES_128_GCM_SHA256",
+      "TLS_RSA_WITH_AES_256_GCM_SHA384",
+      "TLS_RSA_WITH_AES_128_CBC_SHA",
+      "TLS_RSA_WITH_AES_256_CBC_SHA"
+    ],
+    "curves": ["x25519", "secp256r1", "secp384r1"],
+    "signature_algorithms": [
+      "ecdsa_secp256r1_sha256",
+      "rsa_pss_rsae_sha256",
+      "rsa_pkcs1_sha256",
+      "ecdsa_secp384r1_sha384",
+      "rsa_pss_rsae_sha384",
+      "rsa_pkcs1_sha384",
+      "rsa_pss_rsae_sha512",
+      "rsa_pkcs1_sha512"
+    ],
+    "alpn": ["h2", "http/1.1"]
+  },
+  "http2": {
+    "settings": {
+      "HEADER_TABLE_SIZE": 65536,
+      "ENABLE_PUSH": 0,
+      "INITIAL_WINDOW_SIZE": 6291456,
+      "MAX_FRAME_SIZE": 16777215
+    },
+    "window_update": 15663105,
+    "pseudo_header_order": [":method", ":authority", ":scheme", ":path"]
+  },
+  "headers": {
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "accept_language": "en-US,en;q=0.9",
+    "accept_encoding": "gzip, deflate, br, zstd",
+    "order": [
+      "sec-ch-ua", "sec-ch-ua-mobile", "sec-ch-ua-platform",
+      "upgrade-insecure-requests", "user-agent", "accept",
+      "sec-fetch-site", "sec-fetch-mode", "sec-fetch-user",
+      "sec-fetch-dest", "accept-encoding", "accept-language"
+    ],
+    "extra": {
+      "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"142\", \"Microsoft Edge\";v=\"142\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "upgrade-insecure-requests": "1",
+      "sec-fetch-site": "none",
+      "sec-fetch-mode": "navigate",
+      "sec-fetch-user": "?1",
+      "sec-fetch-dest": "document"
+    }
+  }
+}

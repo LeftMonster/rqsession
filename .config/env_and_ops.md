@@ -14,9 +14,9 @@ originSessionId: 000305d5-b114-4d73-bb44-601895e3d204
 
 ### 各项目 conda 环境
 
-| 项目 | conda 环境名 | 备注 |
-|---|---|---|
-| requestsession（本项目） | `taskpltform` | 注意：拼写即如此（platform 少了 'a'），非笔误 |
+| 项目 | conda 环境名      | 备注 |
+|---|----------------|---|
+| requestsession（本项目） | `taskplatfrom` | 注意：拼写即如此（platform 少了 'a'），非笔误 |
 
 ### 运行命令（PowerShell）
 

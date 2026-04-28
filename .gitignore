@@ -1,16 +1,27 @@
-dist/
-
-rust/target/
-
-tmp/
-
-fc_rust_proxy/
-
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.egg-info/
-.idea/
-.claude/
-.venv/
 *.egg
+dist/
+.venv/
+
+# Compiled Rust extension (platform-specific binaries, built locally or by CI)
+*.pyd
+*.pdb
+*.so
+*.dylib
+
+# Rust build artifacts
+target/
+
+# Local / personal
+.claude/
+.idea/
+.config/MEMORY.md
+tmp/
+
+# Unrelated subprojects
+fc_rust_proxy/
+rust/

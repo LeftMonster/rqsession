@@ -6,7 +6,7 @@ sys.path.insert(0, "D:/ownrepo-github/requestsession/rqsession")
 
 warnings.filterwarnings("ignore", category=UserWarning, module="browser_forge")
 
-from browser_forge import BrowserClient, Chrome119, Safari17, Edge142
+from rqsession.browser_forge import BrowserClient, Chrome119, Safari17, Edge142
 
 
 def search_channel_by_keyword(keyword: str, profile) -> dict:

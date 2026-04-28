@@ -31,12 +31,13 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/sherlock/rqsession"
+Homepage = "https://github.com/LeftMonster/rqsession"
 
 [build-system]
-requires = ["setuptools>=61,<77", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1,<2"]
+build-backend = "maturin"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["rqsession*"]
+[tool.maturin]
+module-name = "rqsession._rust_core"
+python-source = "."
+features = ["pyo3/extension-module"]

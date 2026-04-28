@@ -1,6 +1,6 @@
 # rqsession 项目架构说明
 
-**版本：** 0.3.1  
+**版本：** 0.3.2  
 **核心目标：** 通过控制 TLS ClientHello 参数（cipher suites、extensions、curves 等）模拟真实浏览器的 TLS 指纹（JA3/JA4），使爬虫请求在指纹层面与真实浏览器无法区分。
 
 ---
@@ -12,10 +12,14 @@
   │
   ├─── RequestSession            基础会话层（无 TLS 伪造）
   │
-  ├─── EnhancedRequestSession    增强会话层（主推接口）
+  ├─── EnhancedRequestSession    增强会话层
   │         │
   │         ├─ 正常路径 ──────▶  Rust 代理服务（:5005）──▶ 目标网站
   │         └─ 降级路径 ──────▶  标准 requests ──────────▶ 目标网站
+  │
+  ├─── rust_session              ★ 新增（v0.3.2）纯 Rust PyO3 扩展
+  │         │                      无需启动外部进程，直接 import
+  │         └─ BrowserSession ──▶  BoringSSL（完整 JA3/JA4）──▶ 目标网站
   │
   └─── browser_forge             精细指纹管理子系统
             ├─ BrowserClient     ──▶  curl_cffi（JA3/impersonate 模式）──▶ 目标网站
@@ -169,14 +173,15 @@ JA3 hash 用 SHA-256 计算（目前用 SHA-256 而非 MD5，与标准 JA3 hash 
 
 ---
 
-## 两种 TLS 指纹实现路径对比
+## 三种 TLS 指纹实现路径对比
 
-| 维度 | Rust 代理路径 | curl_cffi 路径 |
-|---|---|---|
-| 入口 | `EnhancedRequestSession` / `AsyncRustTLSProxyClient` | `BrowserClient` |
-| TLS 控制方式 | reqwest 内置浏览器 profile（JA3/JA4 静态配置） | curl_cffi JA3 字符串 + akamai + extra_fp |
-| TLS 1.3 支持 | 是 | 否（含 TLS 1.3 ciphers 时 fallback 到 impersonate） |
-| HTTP/2 指纹 | 无精确控制 | akamai 字符串精确控制 |
-| 使用场景 | 同步爬虫，兼容现有 requests 用法 | 需要精确 JA3 匹配，或已有真实指纹数据 |
-| 依赖 | Rust 服务需单独启动 / 部署 | 纯 Python，无需额外服务 |
-| 降级 | 自动降级为标准 requests | 自动降级为 impersonate 模式 |
+| 维度 | rust_session（★推荐） | Rust 代理路径 | curl_cffi 路径 |
+|---|---|---|---|
+| 入口 | `BrowserSession` | `EnhancedRequestSession` / `AsyncRustTLSProxyClient` | `BrowserClient` |
+| TLS 控制 | BoringSSL 完整控制（JA3/JA4） | reqwest 内置 profile（静态） | curl_cffi JA3 + akamai + extra_fp |
+| TLS 1.3 | 完整支持 | 是 | 否（含 1.3 cipher 时 fallback） |
+| HTTP/2 指纹 | SETTINGS 帧参数自定义 | 无精确控制 | akamai 字符串精确控制 |
+| 外部进程 | 无（PyO3 直接 import） | 需启动 :5005 服务 | 无 |
+| Profile 扩展 | JSON 文件，自行添加 | 代码内写死 | 代码内写死 |
+| 使用场景 | 所有需要精确指纹的场景 | 兼容旧代码 | 需要精确 JA3 匹配 |
+| 降级 | 无（直接报错） | 自动降级为标准 requests | 自动降级为 impersonate |
