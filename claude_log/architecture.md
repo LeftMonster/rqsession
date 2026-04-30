@@ -19,7 +19,9 @@
   │
   ├─── rust_session              ★ 新增（v0.3.2）纯 Rust PyO3 扩展
   │         │                      无需启动外部进程，直接 import
-  │         └─ BrowserSession ──▶  BoringSSL（完整 JA3/JA4）──▶ 目标网站
+  │         ├─ BrowserSession      同步，每实例自建 Tokio Runtime（block_on）
+  │         └─ AsyncBrowserSession 异步，pyo3-async-runtimes 全局 Runtime
+  │                   └──────────▶ BoringSSL（完整 JA3/JA4）──▶ 目标网站
   │
   └─── browser_forge             精细指纹管理子系统
             ├─ BrowserClient     ──▶  curl_cffi（JA3/impersonate 模式）──▶ 目标网站
@@ -177,7 +179,7 @@ JA3 hash 用 SHA-256 计算（目前用 SHA-256 而非 MD5，与标准 JA3 hash 
 
 | 维度 | rust_session（★推荐） | Rust 代理路径 | curl_cffi 路径 |
 |---|---|---|---|
-| 入口 | `BrowserSession` | `EnhancedRequestSession` / `AsyncRustTLSProxyClient` | `BrowserClient` |
+| 入口 | `BrowserSession` / `AsyncBrowserSession` | `EnhancedRequestSession` / `AsyncRustTLSProxyClient` | `BrowserClient` |
 | TLS 控制 | BoringSSL 完整控制（JA3/JA4） | reqwest 内置 profile（静态） | curl_cffi JA3 + akamai + extra_fp |
 | TLS 1.3 | 完整支持 | 是 | 否（含 1.3 cipher 时 fallback） |
 | HTTP/2 指纹 | SETTINGS 帧参数自定义 | 无精确控制 | akamai 字符串精确控制 |

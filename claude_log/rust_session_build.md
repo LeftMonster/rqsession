@@ -31,25 +31,34 @@ brew install cmake
 ## 关键 Cargo 依赖版本
 
 ```toml
-pyo3         = { version = "0.22", features = ["extension-module"] }
-boring       = "4"        # 实际解析到 4.21.2
-tokio-boring = "4"
-hyper        = { version = "1", features = ["http1", "http2"] }
-hyper-util   = { version = "0.1", features = ["tokio", "client", "http1", "http2"] }
+pyo3                = { version = "0.22", features = ["extension-module"] }
+pyo3-async-runtimes = { version = "0.22", features = ["tokio-runtime"] }  # 异步版本必须
+boring              = "4"        # 实际解析到 4.21.2
+tokio-boring        = "4"
+hyper               = { version = "1", features = ["http1", "http2"] }
+hyper-util          = { version = "0.1", features = ["tokio", "client", "http1", "http2"] }
+flate2              = "1"        # gzip / deflate 解压
+brotli              = "7"        # br 解压
+zstd                = "0.13"     # zstd 解压
 ```
+
+版本对应关系：`pyo3-async-runtimes` major 版本必须与 `pyo3` 一致（同为 0.22）。
 
 ---
 
 ## 本地开发安装
 
-Anaconda 环境没有 `VIRTUAL_ENV` 或 `CONDA_PREFIX` 时，maturin 找不到环境，需要手动指定：
+Anaconda 环境没有 `VIRTUAL_ENV` 或 `CONDA_PREFIX` 时，maturin 找不到环境，需要手动指定（PowerShell）：
 
-```bash
-# 在项目根目录
-VIRTUAL_ENV="D:/anaconda" python -m maturin develop --release --manifest-path Cargo.toml
+```powershell
+$env:CONDA_PREFIX = "D:\anaconda"
+D:\anaconda\python.exe -m maturin develop --manifest-path D:\ownrepo-github\requestsession\Cargo.toml
 ```
 
-注意必须加 `--manifest-path Cargo.toml`，否则 maturin 可能误找到 `rust/Cargo.toml`（`rust_proxy_tls` 包）。
+注意事项：
+- 用 `CONDA_PREFIX` 而不是 `VIRTUAL_ENV`（anaconda 用 CONDA_PREFIX，virtualenv 用 VIRTUAL_ENV）
+- 必须加 `--manifest-path`，否则 maturin 可能误找到 `rust/Cargo.toml`（`rust_proxy_tls` 包，不含 pyo3/extension-module feature，会报错）
+- 在 bash 环境里 `maturin` 命令找不到，必须用 `D:\anaconda\python.exe -m maturin`
 
 安装成功后，`.pyd` 文件会出现在：
 ```
