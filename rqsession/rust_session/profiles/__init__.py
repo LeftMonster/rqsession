@@ -19,6 +19,8 @@ def list_builtin() -> list[str]:
 
 
 def list_custom() -> list[str]:
+    if not _CUSTOM_DIR.exists():
+        return []
     return [p.stem for p in _CUSTOM_DIR.glob("*.json")]
 
 
@@ -38,6 +40,7 @@ _cache: dict = {}
 def _get(name: str):
     if name not in _cache:
         path = _BUILTIN_DIR / f"{name}.json"
+        print("使用: {}".format(path))
         if not path.exists():
             raise FileNotFoundError(f"Built-in profile not found: {name}")
         _cache[name] = _load(path)
@@ -59,5 +62,6 @@ class _ProfileProxy:
 Chrome120 = _ProfileProxy("chrome120_windows")
 Chrome119 = _ProfileProxy("chrome119_windows")
 Edge142   = _ProfileProxy("edge142_windows")
+Edge147   = _ProfileProxy("edge147_windows")
 Firefox133 = _ProfileProxy("firefox133_windows")
 Safari17  = _ProfileProxy("safari17_macos")

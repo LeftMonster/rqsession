@@ -1,8 +1,10 @@
 from .session import BrowserSession
+from .async_session import AsyncBrowserSession
 from .profiles import (
     Chrome120,
     Chrome119,
     Edge142,
+    Edge147,
     Firefox133,
     Safari17,
     load_custom,
@@ -13,9 +15,11 @@ from rqsession._rust_core import load_profile, load_profile_json
 
 __all__ = [
     "BrowserSession",
+    "AsyncBrowserSession",
     "Chrome120",
     "Chrome119",
     "Edge142",
+    "Edge147",
     "Firefox133",
     "Safari17",
     "load_profile",

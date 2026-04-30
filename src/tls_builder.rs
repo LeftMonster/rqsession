@@ -51,6 +51,11 @@ pub fn build_ssl_connector(config: &TlsConfig, verify: bool, ca_bundle: Option<&
             .map_err(|e| Error::Tls(e.to_string()))?;
     }
 
+    // --- GREASE (RFC 8701) ---
+    if config.grease {
+        builder.set_grease_enabled(true);
+    }
+
     // --- Certificate verification ---
     if !verify {
         builder.set_verify(boring::ssl::SslVerifyMode::NONE);

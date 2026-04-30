@@ -110,9 +110,12 @@ def _parse_akamai(fp: str):
     Parse the akamai_fingerprint string as a fallback source for H2 settings.
     Format: 'SETTINGS|WINDOW_UPDATE|PRIORITY|PSEUDO_ORDER'
     Example: '1:65536;2:0;4:6291456|15663105|0|m,a,s,p'
+    Chrome:  '1:65536;2:0;4:6291456|15663105|0:0:0:201,3:0:0:201,5:0:0:101,7:0:0:1,9:0:7:1,11:0:3:1|m,a,s,p'
+    PRIORITY segment format per entry: stream_id:exclusive:dep_id:weight (weight is 1-256 RFC value)
     """
     parts = fp.split("|")
     settings = {}
+    settings_order = []
     if parts:
         for pair in parts[0].split(";"):
             if ":" in pair:
@@ -121,6 +124,7 @@ def _parse_akamai(fp: str):
                 if key:
                     try:
                         settings[key] = int(v.strip())
+                        settings_order.append(key)
                     except ValueError:
                         pass
 
@@ -131,6 +135,23 @@ def _parse_akamai(fp: str):
         except ValueError:
             pass
 
+    priority_frames = []
+    if len(parts) >= 3 and parts[2] and parts[2] != "0":
+        for entry in parts[2].split(","):
+            fields = entry.split(":")
+            if len(fields) == 4:
+                try:
+                    sid   = int(fields[0])
+                    excl  = fields[1] == "1"
+                    dep   = int(fields[2])
+                    # akamai weight is 1-256 RFC value; h2 crate uses 0-255 so subtract 1
+                    wt    = max(0, int(fields[3]) - 1)
+                    if sid != 0:  # stream 0 entry is a placeholder, skip
+                        priority_frames.append({"stream_id": sid, "dependency": dep,
+                                                "weight": wt, "exclusive": excl})
+                except ValueError:
+                    pass
+
     pseudo_order = [":method", ":authority", ":scheme", ":path"]
     if len(parts) >= 4:
         pseudo_order = [
@@ -138,13 +159,15 @@ def _parse_akamai(fp: str):
             for c in parts[3].split(",")
         ]
 
-    return settings, window_update, pseudo_order
+    return settings, settings_order, window_update, priority_frames, pseudo_order
 
 
 def _extract_http2(http2: dict) -> dict:
     settings = {}
+    settings_order = []
     window_update = 15663105
     pseudo_order = [":method", ":authority", ":scheme", ":path"]
+    priority_frames = []
 
     frames = http2.get("sent_frames", [])
 
@@ -157,14 +180,26 @@ def _extract_http2(http2: dict) -> dict:
                 if " = " in s:
                     k, v = s.split(" = ", 1)
                     k = k.strip()
-                    if k in {v for v in _H2_SETTING_ID_MAP.values()}:
+                    if k in set(_H2_SETTING_ID_MAP.values()):
                         try:
                             settings[k] = int(v.strip())
+                            if k not in settings_order:
+                                settings_order.append(k)
                         except ValueError:
                             pass
 
         elif ftype == "WINDOW_UPDATE" and frame.get("stream_id", 0) == 0:
             window_update = frame.get("increment", window_update)
+
+        elif ftype == "PRIORITY":
+            sid  = frame.get("stream_id", 0)
+            dep  = frame.get("stream_dependency", frame.get("depends_on", 0))
+            excl = frame.get("exclusive", False)
+            # tls.peet.ws reports weight as the raw wire value (0-255)
+            wt   = frame.get("weight", 0)
+            if sid != 0:
+                priority_frames.append({"stream_id": sid, "dependency": dep,
+                                        "weight": wt, "exclusive": excl})
 
         elif ftype == "HEADERS":
             pseudo_order = []
@@ -177,13 +212,14 @@ def _extract_http2(http2: dict) -> dict:
 
     # Fallback: parse from akamai_fingerprint string
     if not settings and "akamai_fingerprint" in http2:
-        settings, window_update, pseudo_order = _parse_akamai(
-            http2["akamai_fingerprint"]
-        )
+        settings, settings_order, window_update, priority_frames, pseudo_order = \
+            _parse_akamai(http2["akamai_fingerprint"])
 
     return {
         "settings": settings,
+        "settings_order": settings_order,
         "window_update": window_update,
+        "priority_frames": priority_frames,
         "pseudo_header_order": pseudo_order,
     }
 
@@ -241,15 +277,20 @@ def convert(data: dict, profile_name: str) -> dict:
     h2_raw = _extract_http2(data.get("http2", {}))
     headers = _extract_headers(data.get("http2", {}))
 
+    h2 = {
+        "settings": h2_raw["settings"],
+        "settings_order": h2_raw["settings_order"],
+        "window_update": h2_raw["window_update"],
+        "pseudo_header_order": h2_raw["pseudo_header_order"],
+    }
+    if h2_raw["priority_frames"]:
+        h2["priority_frames"] = h2_raw["priority_frames"]
+
     return {
         "name": profile_name,
         "user_agent": user_agent,
         "tls": tls,
-        "http2": {
-            "settings": h2_raw["settings"],
-            "window_update": h2_raw["window_update"],
-            "pseudo_header_order": h2_raw["pseudo_header_order"],
-        },
+        "http2": h2,
         "headers": headers,
     }
 
