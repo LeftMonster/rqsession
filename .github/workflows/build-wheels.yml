@@ -38,9 +38,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ── macOS: cmake required by BoringSSL ──────────────────────────────
       - name: Install cmake (macOS)
         if: runner.os == 'macOS'
         run: brew install cmake
+
+      # ── Windows: NASM required by BoringSSL asm optimisations ───────────
+      - name: Install NASM (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/setup-nasm@v1
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -50,18 +56,19 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      # ── Build wheels ─────────────────────────────────────────────────────
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux }}
           args: --release --out dist --find-interpreter
-          # cmake needed inside manylinux container
+          # Inside manylinux containers: cmake + NASM + clang for BoringSSL
           before-script-linux: |
             if command -v yum &>/dev/null; then
-              yum install -y cmake3 && ln -sf cmake3 /usr/bin/cmake || true
+              yum install -y cmake3 nasm clang && ln -sf cmake3 /usr/bin/cmake || true
             else
-              apt-get update && apt-get install -y cmake || true
+              apt-get update && apt-get install -y cmake nasm clang || true
             fi
 
       - name: Upload wheels
@@ -70,7 +77,7 @@ jobs:
           name: wheels-${{ matrix.os }}-${{ matrix.target }}
           path: dist/
 
-  # Build pure-Python sdist as fallback
+  # ── Source distribution (fallback for unsupported platforms) ─────────────
   sdist:
     name: Build sdist
     runs-on: ubuntu-latest
@@ -85,12 +92,14 @@ jobs:
           name: wheels-sdist
           path: dist/
 
-  # Upload all wheels to PyPI
+  # ── Publish all wheels + sdist to PyPI on tag push ───────────────────────
   release:
     name: Publish to PyPI
     runs-on: ubuntu-latest
     needs: [build, sdist]
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      id-token: write  # required for Trusted Publisher (OIDC)
     steps:
       - uses: actions/download-artifact@v4
         with:

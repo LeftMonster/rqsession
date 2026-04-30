@@ -32,7 +32,9 @@
       "rsa_pss_rsae_sha512",
       "rsa_pkcs1_sha512"
     ],
-    "alpn": ["h2", "http/1.1"]
+    "alpn": ["h2", "http/1.1"],
+    "grease": true,
+    "alps": ["h2"]
   },
   "http2": {
     "settings": {
@@ -41,6 +43,7 @@
       "INITIAL_WINDOW_SIZE": 6291456,
       "MAX_FRAME_SIZE": 16777215
     },
+    "settings_order": ["HEADER_TABLE_SIZE", "ENABLE_PUSH", "INITIAL_WINDOW_SIZE", "MAX_FRAME_SIZE"],
     "window_update": 15663105,
     "pseudo_header_order": [":method", ":authority", ":scheme", ":path"]
   },

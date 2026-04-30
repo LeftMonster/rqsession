@@ -33,8 +33,9 @@
 
 ```
 rqsession/rust_session/
-├── __init__.py          导出 BrowserSession + 内置 profile 对象 + load_*/list_* 函数
-├── session.py           Python 包装层（BrowserSession 类）
+├── __init__.py          导出 BrowserSession、AsyncBrowserSession + 内置 profile 对象 + load_*/list_* 函数
+├── session.py           Python 包装层（BrowserSession 同步类）
+├── async_session.py     Python 包装层（AsyncBrowserSession 异步类）
 └── profiles/
     ├── __init__.py      懒加载内置 profile，_ProfileProxy 类
     ├── builtin/         内置 JSON 文件（5 个）
@@ -46,13 +47,16 @@ rqsession/rust_session/
     └── custom/          用户自定义（空目录，用户自己扔 JSON）
 
 src/                     Rust 源码（PyO3 扩展）
-├── lib.rs               PyBrowserProfile / PyBrowserSession / PyResponse + pymodule
+├── lib.rs               PyBrowserProfile / PyBrowserSession / PyAsyncBrowserSession / PyResponse + pymodule
 ├── profile.rs           BrowserProfile / TlsConfig / Http2Config / HeaderConfig 数据结构
-├── http_client.rs       execute() + send_once() + do_h1/h2 + connect_via_proxy + 重定向
+├── http_client.rs       execute() + send_once() + do_h1/h2 + connect_via_proxy + 重定向 + 解压
 ├── tls_builder.rs       build_ssl_connector()，BoringSSL TLS 配置
 ├── cipher_map.rs        IANA → OpenSSL cipher 名转换，curves_to_groups_list，encode_alpn
 ├── response.rs          RustResponse 结构体
 └── error.rs             Error enum + From<Error> for PyErr
+
+tools/
+└── tls_peet_to_profile.py  将 tls.peet.ws/api/all JSON 转换为 BrowserProfile JSON（见 profile_tools.md）
 ```
 
 ---
@@ -93,10 +97,23 @@ src/                     Rust 源码（PyO3 扩展）
     "accept": "text/html,application/xhtml+xml,...",
     "accept_language": "en-US,en;q=0.9",
     "accept_encoding": "gzip, deflate, br",
-    "order": ["user-agent", "accept", "accept-language", "accept-encoding"],
-    "extra": {}
+    "order": ["user-agent", "accept", "accept-language", "accept-encoding",
+              "sec-ch-ua", "sec-ch-ua-mobile", "sec-ch-ua-platform",
+              "upgrade-insecure-requests", "sec-fetch-site", "sec-fetch-mode",
+              "sec-fetch-user", "sec-fetch-dest"],
+    "extra": {
+      "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\"...",
+      "sec-fetch-site": "none",
+      "..."
+    }
   }
 }
+```
+
+`extra` 字段说明：
+- `order` 列表中不在 4 个基础 header（user-agent/accept/accept-language/accept-encoding）中的名字，其值从 `extra` 中查找
+- 每次请求按 `order` 顺序构建请求头，保证顺序一致性（底层用 `Vec<(String, String)>` 不是 HashMap）
+- Safari / Firefox 等无 sec-ch-ua 的 profile，`extra` 为空 `{}`，`order` 只含基础 4 项
 ```
 
 cipher_suites 支持：
@@ -111,11 +128,12 @@ curves 支持：`x25519`、`secp256r1`/`prime256v1`/`P-256`、`secp384r1`/`P-384
 ## Python API
 
 ```python
-from rqsession.rust_session import BrowserSession, Chrome120, Firefox133, Safari17
+from rqsession.rust_session import BrowserSession, AsyncBrowserSession
+from rqsession.rust_session import Chrome120, Firefox133, Safari17, Edge142, Chrome119
 from rqsession.rust_session import load_custom, load_profile_json, list_builtin, list_custom
 from rqsession._rust_core import load_profile  # 按路径加载
 
-# 内置 profile（懒加载单例）
+# ── 同步用法 ──────────────────────────────────────────
 s = BrowserSession(Chrome120)
 s = BrowserSession(Firefox133, proxy="http://127.0.0.1:7890")
 s = BrowserSession(Chrome120, verify=False)
@@ -142,6 +160,25 @@ s.update_cookies({"token": "abc"})  # 写入，后续请求自动带上
 with BrowserSession(Chrome120) as s:
     resp = s.get("https://example.com")
 
+# ── 异步用法 ──────────────────────────────────────────
+import asyncio
+
+async def main():
+    async with AsyncBrowserSession(Chrome120) as s:
+        resp = await s.get("https://example.com")
+        data = resp.json()
+
+    # 真正并发，不阻塞线程
+    async with AsyncBrowserSession(Chrome120) as s:
+        results = await asyncio.gather(
+            s.get("https://example.com/a"),
+            s.get("https://example.com/b"),
+        )
+
+asyncio.run(main())
+
+# 构造参数（同步 / 异步相同）：proxy、verify、ca_bundle
+
 # 加载自定义 profile
 profile = load_custom("my_browser")        # 从 profiles/custom/my_browser.json
 profile = load_profile_json('{"name":...}') # 从 JSON 字符串
@@ -165,7 +202,8 @@ list_custom()   # ['my_browser', ...]
 | 签名算法 | `set_sigalgs_list` |
 | TLS 版本范围 | `set_min/max_proto_version` |
 | HTTP/2 设置帧 | `hyper` http2::Builder（initial_window_size、max_frame_size 等） |
-| HTTP CONNECT 代理 | 手动实现 CONNECT 隧道，支持 http/https 代理 |
+| HTTP CONNECT 代理 | 手动实现 CONNECT 隧道，支持 http/https 代理，格式 `http://[user:pass@]host:port` |
+| 响应体解压 | content-encoding 自动解压：gzip（flate2）、deflate（flate2）、br（brotli）、zstd（zstd crate） |
 | 自动重定向 | 最多 10 跳，301/302/303 POST→GET 转换 |
 | SSL 验证跳过 | `verify=False` → `SslVerifyMode::NONE` |
 
