@@ -22,10 +22,10 @@ originSessionId: 000305d5-b114-4d73-bb44-601895e3d204
 
 ```powershell
 # 运行脚本
-& "D:\anaconda\Scripts\conda.exe" run -n twitchminer python <script.py>
+& "D:\anaconda\Scripts\conda.exe" run -n xx python <script.py>
 
 # 安装包
-& "D:\anaconda\Scripts\conda.exe" run -n twitchminer pip install <package>
+& "D:\anaconda\Scripts\conda.exe" run -n xx pip install <package>
 
 # 安装 requirements
 & "D:\anaconda\Scripts\conda.exe" run -n twitchminer pip install -r requirements.txt
@@ -92,9 +92,9 @@ Invoke-RestMethod `
 
 ### 5.1 twitch-drops-sys（具体值）
 
-**仓库**：`LeftMonster/twitch-drops-sys`
-**Remote**：`git@github.com:LeftMonster/twitch-drops-sys.git`
-**项目路径**：`E:\github\twitch-drops-sys\`
+**仓库**：`LeftMonster/{}`
+**Remote**：`git@github.com:LeftMonster/{}.git`
+**项目路径**：`E:\github\{}\`
 
 #### Workflow 文件
 
@@ -140,14 +140,14 @@ $token = ((Get-Content "C:\Users\admin\.config\gh\hosts.yml") -match "oauth_toke
 
 # 触发 build-rust.yaml（PyArmor 版）
 Invoke-RestMethod `
-  -Uri "https://api.github.com/repos/LeftMonster/twitch-drops-sys/actions/workflows/build-rust.yaml/dispatches" `
+  -Uri "https://api.github.com/repos/LeftMonster/{}/actions/workflows/build-rust.yaml/dispatches" `
   -Method Post `
   -Headers @{ Authorization = "Bearer $token"; Accept = "application/vnd.github.v3+json"; "Content-Type" = "application/json" } `
   -Body '{"ref":"develop","inputs":{"triggered_by":"claude","run_py":"true","build_with_release":"false","upload_to_server":"false","upload_to_aliyun_oss":"true"}}'
 
 # 触发 build-cython.yaml（Cython 版）
 Invoke-RestMethod `
-  -Uri "https://api.github.com/repos/LeftMonster/twitch-drops-sys/actions/workflows/build-cython.yaml/dispatches" `
+  -Uri "https://api.github.com/repos/LeftMonster/t{}/actions/workflows/build-cython.yaml/dispatches" `
   -Method Post `
   -Headers @{ Authorization = "Bearer $token"; Accept = "application/vnd.github.v3+json"; "Content-Type" = "application/json" } `
   -Body '{"ref":"develop","inputs":{"triggered_by":"claude","run_py":"true","build_with_release":"false","upload_to_server":"false","upload_to_aliyun_oss":"true"}}'
