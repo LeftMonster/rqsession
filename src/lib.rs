@@ -152,6 +152,7 @@ pub struct PyBrowserSession {
     verify: bool,
     ca_bundle: Option<String>,
     session_cookies: Arc<Mutex<HashMap<String, String>>>,
+    session_headers: Arc<Mutex<HashMap<String, String>>>,
     runtime: Arc<tokio::runtime::Runtime>,
 }
 
@@ -173,6 +174,7 @@ impl PyBrowserSession {
             verify,
             ca_bundle,
             session_cookies: Arc::new(Mutex::new(HashMap::new())),
+            session_headers: Arc::new(Mutex::new(HashMap::new())),
             runtime: Arc::new(runtime),
         })
     }
@@ -290,9 +292,15 @@ impl PyBrowserSession {
         Ok(PyResponse::from_rust(result))
     }
 
-    /// Update or add session-level headers/cookies that are sent on every request.
     fn update_cookies(&self, cookies: HashMap<String, String>) {
         self.session_cookies.lock().unwrap().extend(cookies);
+    }
+
+    fn update_headers(&self, headers: HashMap<String, String>) {
+        let mut sh = self.session_headers.lock().unwrap();
+        for (k, v) in headers {
+            sh.insert(k.to_lowercase(), v);
+        }
     }
 
     #[getter]
@@ -331,6 +339,17 @@ impl PyBrowserSession {
                 }
             }
         }
+
+        // Merge session-level headers after profile baseline
+        let session_hdrs = self.session_headers.lock().unwrap();
+        for (k, v) in session_hdrs.iter() {
+            if let Some(entry) = out.iter_mut().find(|(key, _)| key.eq_ignore_ascii_case(k)) {
+                entry.1 = v.clone();
+            } else {
+                out.push((k.clone(), v.clone()));
+            }
+        }
+        drop(session_hdrs);
 
         // Inject session cookies at the end
         let cookies = self.session_cookies.lock().unwrap();
@@ -394,6 +413,237 @@ fn resolve_post_body(
 }
 
 // ─────────────────────────────────────────────
+// PyAsyncBrowserSession
+// ─────────────────────────────────────────────
+
+#[pyclass(name = "AsyncBrowserSession")]
+pub struct PyAsyncBrowserSession {
+    profile: Arc<BrowserProfile>,
+    proxy: Option<String>,
+    verify: bool,
+    ca_bundle: Option<String>,
+    session_cookies: Arc<Mutex<HashMap<String, String>>>,
+    session_headers: Arc<Mutex<HashMap<String, String>>>,
+}
+
+#[pymethods]
+impl PyAsyncBrowserSession {
+    #[new]
+    #[pyo3(signature = (profile, proxy=None, verify=true, ca_bundle=None))]
+    fn new(
+        profile: &PyBrowserProfile,
+        proxy: Option<String>,
+        verify: bool,
+        ca_bundle: Option<String>,
+    ) -> PyResult<Self> {
+        Ok(Self {
+            profile: Arc::new(profile.inner.clone()),
+            proxy,
+            verify,
+            ca_bundle,
+            session_cookies: Arc::new(Mutex::new(HashMap::new())),
+            session_headers: Arc::new(Mutex::new(HashMap::new())),
+        })
+    }
+
+    #[pyo3(signature = (url, headers=None, params=None))]
+    fn get<'py>(
+        &self,
+        py: Python<'py>,
+        url: String,
+        headers: Option<HashMap<String, String>>,
+        params: Option<HashMap<String, String>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        self.do_request(py, "GET".to_owned(), url, headers, params, None, None)
+    }
+
+    #[pyo3(signature = (url, headers=None, params=None, data=None, json=None))]
+    fn post<'py>(
+        &self,
+        py: Python<'py>,
+        url: String,
+        headers: Option<HashMap<String, String>>,
+        params: Option<HashMap<String, String>>,
+        data: Option<Vec<u8>>,
+        json: Option<HashMap<String, String>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        self.do_request(py, "POST".to_owned(), url, headers, params, data, json)
+    }
+
+    #[pyo3(signature = (method, url, headers=None, params=None, body=None, json=None))]
+    fn request<'py>(
+        &self,
+        py: Python<'py>,
+        method: String,
+        url: String,
+        headers: Option<HashMap<String, String>>,
+        params: Option<HashMap<String, String>>,
+        body: Option<Vec<u8>>,
+        json: Option<HashMap<String, String>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        self.do_request(py, method, url, headers, params, body, json)
+    }
+
+    fn update_cookies(&self, cookies: HashMap<String, String>) {
+        self.session_cookies.lock().unwrap().extend(cookies);
+    }
+
+    fn update_headers(&self, headers: HashMap<String, String>) {
+        let mut sh = self.session_headers.lock().unwrap();
+        for (k, v) in headers {
+            sh.insert(k.to_lowercase(), v);
+        }
+    }
+
+    #[getter]
+    fn profile_name(&self) -> &str {
+        &self.profile.name
+    }
+}
+
+impl PyAsyncBrowserSession {
+    fn do_request<'py>(
+        &self,
+        py: Python<'py>,
+        method: String,
+        url: String,
+        headers: Option<HashMap<String, String>>,
+        params: Option<HashMap<String, String>>,
+        body: Option<Vec<u8>>,
+        json: Option<HashMap<String, String>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let final_url = append_params(&url, params.as_ref());
+        let mut all_headers = self.build_default_headers_async(&final_url);
+
+        if let Some(extra) = headers {
+            for (k, v) in extra {
+                let k_lower = k.to_lowercase();
+                if let Some(entry) = all_headers
+                    .iter_mut()
+                    .find(|(key, _)| key.eq_ignore_ascii_case(&k_lower))
+                {
+                    entry.1 = v;
+                } else {
+                    all_headers.push((k_lower, v));
+                }
+            }
+        }
+
+        // Resolve body and set content-type for JSON
+        let body = if body.is_some() {
+            body
+        } else if let Some(ref j) = json {
+            if let Some(entry) = all_headers
+                .iter_mut()
+                .find(|(k, _)| k.eq_ignore_ascii_case("content-type"))
+            {
+                entry.1 = "application/json".to_owned();
+            } else {
+                all_headers.push(("content-type".to_owned(), "application/json".to_owned()));
+            }
+            Some(
+                serde_json::to_vec(j)
+                    .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?,
+            )
+        } else {
+            None
+        };
+
+        let profile = Arc::clone(&self.profile);
+        let proxy = self.proxy.clone();
+        let verify = self.verify;
+        let ca_bundle = self.ca_bundle.clone();
+        let session_cookies = Arc::clone(&self.session_cookies);
+
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let result = http_client::execute(
+                &method,
+                &final_url,
+                all_headers,
+                body,
+                &profile,
+                proxy.as_deref(),
+                verify,
+                ca_bundle.as_deref(),
+            )
+            .await
+            .map_err(|e| Into::<pyo3::PyErr>::into(e))?;
+
+            // Persist Set-Cookie headers into session cookie store
+            let sc_value = result
+                .headers
+                .get("set-cookie")
+                .or_else(|| result.headers.get("Set-Cookie"))
+                .cloned();
+            if let Some(sc) = sc_value {
+                let mut cookies = session_cookies.lock().unwrap();
+                for cookie in sc.split(',') {
+                    if let Some((name_val, _)) = cookie.split_once(';') {
+                        if let Some((name, value)) = name_val.split_once('=') {
+                            cookies.insert(name.trim().to_owned(), value.trim().to_owned());
+                        }
+                    }
+                }
+            }
+
+            Python::with_gil(|py| Py::new(py, PyResponse::from_rust(result)))
+        })
+    }
+
+    fn build_default_headers_async(&self, _url: &str) -> Vec<(String, String)> {
+        let p = &*self.profile;
+
+        let resolve = |name: &str| -> Option<String> {
+            match name {
+                "user-agent"      => Some(p.user_agent.clone()),
+                "accept"          => Some(p.headers.accept.clone()),
+                "accept-language" => Some(p.headers.accept_language.clone()),
+                "accept-encoding" => Some(p.headers.accept_encoding.clone()),
+                other             => p.headers.extra.get(other).cloned(),
+            }
+        };
+
+        let mut out: Vec<(String, String)> = Vec::new();
+
+        if p.headers.order.is_empty() {
+            out.push(("user-agent".to_owned(),      p.user_agent.clone()));
+            out.push(("accept".to_owned(),           p.headers.accept.clone()));
+            out.push(("accept-language".to_owned(),  p.headers.accept_language.clone()));
+            out.push(("accept-encoding".to_owned(),  p.headers.accept_encoding.clone()));
+        } else {
+            for name in &p.headers.order {
+                if let Some(value) = resolve(name) {
+                    out.push((name.clone(), value));
+                }
+            }
+        }
+
+        // Merge session-level headers after profile baseline
+        let session_hdrs = self.session_headers.lock().unwrap();
+        for (k, v) in session_hdrs.iter() {
+            if let Some(entry) = out.iter_mut().find(|(key, _)| key.eq_ignore_ascii_case(k)) {
+                entry.1 = v.clone();
+            } else {
+                out.push((k.clone(), v.clone()));
+            }
+        }
+        drop(session_hdrs);
+
+        let cookies = self.session_cookies.lock().unwrap();
+        if !cookies.is_empty() {
+            let cookie_str = cookies
+                .iter()
+                .map(|(k, v)| format!("{k}={v}"))
+                .collect::<Vec<_>>()
+                .join("; ");
+            out.push(("cookie".to_owned(), cookie_str));
+        }
+
+        out
+    }
+}
+
+// ─────────────────────────────────────────────
 // Top-level functions
 // ─────────────────────────────────────────────
 
@@ -419,6 +669,7 @@ fn load_profile_json(json: &str) -> PyResult<PyBrowserProfile> {
 fn _rust_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyBrowserProfile>()?;
     m.add_class::<PyBrowserSession>()?;
+    m.add_class::<PyAsyncBrowserSession>()?;
     m.add_class::<PyResponse>()?;
     m.add_function(wrap_pyfunction!(load_profile, m)?)?;
     m.add_function(wrap_pyfunction!(load_profile_json, m)?)?;

@@ -87,6 +87,9 @@ class BrowserSession:
     def update_cookies(self, cookies: dict[str, str]) -> None:
         self._session.update_cookies(cookies)
 
+    def update_headers(self, headers: dict[str, str]) -> None:
+        self._session.update_headers(headers)
+
     @property
     def profile_name(self) -> str:
         return self._session.profile_name

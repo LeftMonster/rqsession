@@ -1,20 +1,7 @@
-[tool.poetry]
-name = "rqsession"
-version = "0.3.2"
-description = "Python requests session wrapper with advanced features for proxy management, session persistence, cookies auto update and request logging."
-authors = ["leftmonster"]
-readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.8"
-requests = "^2.32.3"
-curl-cffi = ">=0.7.0"
-
-
 [project]
 name = "rqsession"
 version = "0.3.2"
-description = "Python requests session wrapper with advanced features for proxy management, session persistence, cookies auto update and request logging."
+description = "Browser TLS fingerprint impersonation library powered by Rust (BoringSSL + hyper)."
 authors = [
     {name = "leftmonster", email = "zhzhsgg@gmail.com"}
 ]
@@ -24,14 +11,24 @@ requires-python = ">=3.8"
 dependencies = [
     "requests>=2.32.3",
     "curl-cffi>=0.7.0",
+    "certifi>=2023.0.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Rust",
     "Operating System :: OS Independent",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Security",
 ]
 
 [project.urls]
-Homepage = "https://github.com/LeftMonster/rqsession"
+Homepage = "https://github.com/LeftMonster/requestsession"
+Repository = "https://github.com/LeftMonster/requestsession"
 
 [build-system]
 requires = ["maturin>=1,<2"]
@@ -41,3 +38,8 @@ build-backend = "maturin"
 module-name = "rqsession._rust_core"
 python-source = "."
 features = ["pyo3/extension-module"]
+# Ensure JSON profile files are bundled into the wheel
+include = [
+    "rqsession/rust_session/profiles/builtin/*.json",
+    "rqsession/rust_session/profiles/custom/.gitkeep",
+]

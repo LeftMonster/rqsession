@@ -1,23 +1,47 @@
-from .request_session import RequestSession
-from .config_util import get_config_ini
-
-# rqsession/__init__.py
 """
-RequestSession - 高级HTTP请求会话管理库
-支持代理管理、会话持久化、TLS指纹伪造和反检测
+rqsession — Browser TLS fingerprint impersonation library.
+
+Primary API (Rust-powered, BoringSSL):
+    from rqsession import BrowserSession, AsyncBrowserSession
+    from rqsession import Chrome120, Firefox133, Safari17, Edge142, Chrome119
+
+Legacy API (pure Python):
+    from rqsession import RequestSession, EnhancedRequestSession
 """
 
 __version__ = "0.3.2"
 __author__ = "Sherlock"
 __email__ = "zhzhsgg@gmail.com"
 
+# ── Primary: Rust-powered browser-impersonating sessions ─────────────────────
+from .rust_session import (
+    BrowserSession,
+    AsyncBrowserSession,
+    Chrome120,
+    Chrome119,
+    Edge142,
+    Firefox133,
+    Safari17,
+)
+
+# ── Legacy layers (backward compatibility) ───────────────────────────────────
 from .request_session import RequestSession
 from .enhanced_request_session import EnhancedRequestSession
+from .config_util import get_config_ini
+
+RqSession = EnhancedRequestSession
 
 __all__ = [
-    'RequestSession',
-    'EnhancedRequestSession',
+    # Primary
+    "BrowserSession",
+    "AsyncBrowserSession",
+    "Chrome120",
+    "Chrome119",
+    "Edge142",
+    "Firefox133",
+    "Safari17",
+    # Legacy
+    "RequestSession",
+    "EnhancedRequestSession",
+    "RqSession",
 ]
-
-# 默认导出增强版作为主要接口
-RqSession = EnhancedRequestSession

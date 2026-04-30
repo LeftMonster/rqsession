@@ -18,6 +18,23 @@ pub struct TlsConfig {
     pub curves: Vec<String>,
     pub signature_algorithms: Vec<String>,
     pub alpn: Vec<String>,
+    /// Enable TLS GREASE (RFC 8701). Chromium browsers send GREASE; Firefox/Safari do not.
+    #[serde(default)]
+    pub grease: bool,
+    /// ALPS protocols (application_settings TLS extension, id 17513).
+    /// Chromium sends this for each h2/h3 ALPN protocol it negotiates.
+    /// Firefox/Safari do not send ALPS.
+    #[serde(default)]
+    pub alps: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct PriorityFrameSpec {
+    pub stream_id: u32,
+    pub dependency: u32,
+    pub weight: u8,
+    #[serde(default)]
+    pub exclusive: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -25,6 +42,15 @@ pub struct Http2Config {
     pub settings: Http2Settings,
     pub window_update: u32,
     pub pseudo_header_order: Vec<String>,
+    /// SETTINGS parameter names in the order they appear on the wire.
+    /// e.g. ["HEADER_TABLE_SIZE", "ENABLE_PUSH", "INITIAL_WINDOW_SIZE", "MAX_FRAME_SIZE"]
+    /// Empty = use h2 crate default order (for backwards compatibility).
+    #[serde(default)]
+    pub settings_order: Vec<String>,
+    /// PRIORITY frames sent after SETTINGS during H2 handshake (browser fingerprint).
+    /// Empty = no PRIORITY frames (Firefox, Safari behaviour).
+    #[serde(default)]
+    pub priority_frames: Vec<PriorityFrameSpec>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

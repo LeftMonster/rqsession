@@ -1,17 +1,37 @@
 use std::collections::HashMap;
 use std::io::Read;
 
-use bytes::Bytes;
-use http::{Request, Uri};
+use bytes::{Bytes, BytesMut, BufMut};
+use http::{Request, Uri, Version};
 use http_body_util::{BodyExt, Full};
-use hyper::client::conn::{http1, http2};
-use hyper_util::rt::{TokioExecutor, TokioIo};
+use hyper::client::conn::http1;
+use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
+
+use foreign_types_shared::ForeignTypeRef;
 
 use crate::error::Error;
 use crate::profile::BrowserProfile;
 use crate::response::RustResponse;
 use crate::tls_builder::build_ssl_connector;
+
+/// Add ALPS (Application-Layer Protocol Settings, TLS extension 17513) per-connection.
+/// Chrome/Chromium calls SSL_add_application_settings for each ALPN protocol it supports.
+/// The settings payload is empty (Chrome advertises the extension with no extra data).
+fn configure_alps(ssl: &boring::ssl::SslRef, protocols: &[String]) {
+    for proto in protocols {
+        let bytes = proto.as_bytes();
+        unsafe {
+            boring_sys::SSL_add_application_settings(
+                ssl.as_ptr(),
+                bytes.as_ptr(),
+                bytes.len(),
+                std::ptr::null(),
+                0,
+            );
+        }
+    }
+}
 
 const MAX_REDIRECTS: usize = 10;
 
@@ -104,16 +124,21 @@ async fn send_once(
             .set_hostname(&host)
             .map_err(|e| Error::Tls(e.to_string()))?;
 
+        // ALPS per-connection setup (Chrome/Chromium only; no-op when alps is empty)
+        if !profile.tls.alps.is_empty() {
+            configure_alps(&*config, &profile.tls.alps);
+        }
+
         let tls = tokio_boring::connect(config, &host, tcp)
             .await
             .map_err(|e| Error::Tls(e.to_string()))?;
 
         let use_h2 = tls.ssl().selected_alpn_protocol() == Some(b"h2");
-        let io = TokioIo::new(tls);
 
         if use_h2 {
-            do_h2(method, &uri, extra_headers, body, io, profile).await
+            do_h2(method, &uri, extra_headers, body, tls, profile).await
         } else {
+            let io = TokioIo::new(tls);
             do_h1(method, &uri, extra_headers, body, io).await
         }
     } else {
@@ -154,42 +179,166 @@ async fn do_h2<IO>(
     uri: &Uri,
     extra_headers: &[(String, String)],
     body: Option<Vec<u8>>,
-    io: TokioIo<IO>,
+    io: IO,
     profile: &BrowserProfile,
 ) -> Result<RustResponse, Error>
 where
     IO: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static,
 {
-    let s = &profile.http2.settings;
-    let mut builder = http2::Builder::new(TokioExecutor::new());
+    // ── 1. Build the SETTINGS frame with configured values and wire order ──
 
-    if let Some(v) = s.initial_window_size {
-        builder.initial_stream_window_size(v);
+    let s = &profile.http2.settings;
+    let mut settings = h2::frame::Settings::default();
+
+    if let Some(v) = s.header_table_size {
+        settings.set_header_table_size(Some(v));
     }
-    builder.initial_connection_window_size(profile.http2.window_update);
+    if let Some(v) = s.enable_push {
+        settings.set_enable_push(v != 0);
+    }
+    if let Some(v) = s.max_concurrent_streams {
+        settings.set_max_concurrent_streams(Some(v));
+    }
+    if let Some(v) = s.initial_window_size {
+        settings.set_initial_window_size(Some(v));
+    }
     if let Some(v) = s.max_frame_size {
-        builder.max_frame_size(v);
+        settings.set_max_frame_size(Some(v));
     }
     if let Some(v) = s.max_header_list_size {
-        builder.max_header_list_size(v);
+        settings.set_max_header_list_size(Some(v));
     }
 
-    let (mut sender, conn) = builder
-        .handshake(io)
+    // Map setting name strings → wire IDs, preserve order from profile.
+    if !profile.http2.settings_order.is_empty() {
+        let order: Vec<u16> = profile.http2.settings_order.iter()
+            .filter_map(|name| match name.as_str() {
+                "HEADER_TABLE_SIZE"      => Some(1),
+                "ENABLE_PUSH"            => Some(2),
+                "MAX_CONCURRENT_STREAMS" => Some(3),
+                "INITIAL_WINDOW_SIZE"    => Some(4),
+                "MAX_FRAME_SIZE"         => Some(5),
+                "MAX_HEADER_LIST_SIZE"   => Some(6),
+                _                        => None,
+            })
+            .collect();
+        settings.set_settings_order(order);
+    }
+
+    // ── 2. Set the pseudo-header emission order (thread-local) ──
+
+    let pseudo_order = build_pseudo_order(&profile.http2.pseudo_header_order);
+    h2::frame::set_pseudo_header_order(pseudo_order);
+
+    // ── 3. Build PRIORITY frames from profile spec ──
+
+    let priority_frames: Vec<h2::frame::Priority> = profile.http2.priority_frames.iter()
+        .map(|spec| {
+            let stream_id: h2::frame::StreamId = spec.stream_id.into();
+            let dep_id: h2::frame::StreamId = spec.dependency.into();
+            let dep = h2::frame::StreamDependency::new(dep_id, spec.weight, spec.exclusive);
+            h2::frame::Priority::new(stream_id, dep)
+        })
+        .collect();
+
+    // ── 4. Handshake ──
+
+    let mut builder = h2::client::Builder::new();
+    // profile.http2.window_update is the exact WINDOW_UPDATE increment the browser sends.
+    // h2 Builder's initial_connection_window_size sets the *target* and sends
+    // increment = target - 65535 (the H2 default). So we add 65535 back to get the
+    // correct on-wire value.
+    const H2_DEFAULT_CONN_WINDOW: u32 = 65535;
+    builder.initial_connection_window_size(H2_DEFAULT_CONN_WINDOW + profile.http2.window_update);
+    if let Some(v) = s.initial_window_size {
+        builder.initial_window_size(v);
+    }
+    let (client, conn) = builder
+        .settings_frame(settings)
+        .priority_frames(priority_frames)
+        .handshake::<_, Bytes>(io)
         .await
         .map_err(|e| Error::Http(e.to_string()))?;
 
-    tokio::spawn(async move {
-        let _ = conn.await;
-    });
+    tokio::spawn(async move { let _ = conn.await; });
 
-    let req = build_request(method, uri, extra_headers, body)?;
-    let resp = sender
-        .send_request(req)
-        .await
+    // ── 5. Build and send the request ──
+
+    let mut req_builder = Request::builder()
+        .method(method)
+        .uri(uri.clone())
+        .version(Version::HTTP_2);
+
+    for (k, v) in extra_headers {
+        req_builder = req_builder.header(k.as_str(), v.as_str());
+    }
+
+    let has_body = body.is_some();
+    let request = req_builder
+        .body(())
         .map_err(|e| Error::Http(e.to_string()))?;
 
-    collect_response(resp, uri).await
+    let mut client = client.ready().await.map_err(|e| Error::Http(e.to_string()))?;
+    let (response_fut, mut send_stream) = client
+        .send_request(request, !has_body)
+        .map_err(|e| Error::Http(e.to_string()))?;
+
+    if let Some(data) = body {
+        send_stream
+            .send_data(Bytes::from(data), true)
+            .map_err(|e| Error::Http(e.to_string()))?;
+    }
+
+    // ── 6. Collect response ──
+
+    let response = response_fut.await.map_err(|e| Error::Http(e.to_string()))?;
+    let status = response.status().as_u16();
+
+    let headers: HashMap<String, String> = response
+        .headers()
+        .iter()
+        .map(|(k, v)| (k.as_str().to_owned(), v.to_str().unwrap_or("").to_owned()))
+        .collect();
+
+    let mut body_stream = response.into_body();
+    let mut raw = BytesMut::new();
+    while let Some(chunk) = body_stream.data().await {
+        let chunk = chunk.map_err(|e| Error::Http(e.to_string()))?;
+        raw.put_slice(&chunk);
+        let _ = body_stream.flow_control().release_capacity(chunk.len());
+    }
+
+    let encoding = headers
+        .get("content-encoding")
+        .map(|s| s.as_str())
+        .unwrap_or("");
+    let body_bytes = decompress(raw.to_vec(), encoding)?;
+
+    Ok(RustResponse {
+        status_code: status,
+        headers,
+        body: body_bytes,
+        url: uri.to_string(),
+    })
+}
+
+/// Map profile pseudo_header_order strings to the [u8; 4] thread-local format.
+/// Values: 1=:method  2=:scheme  3=:authority  4=:path
+fn build_pseudo_order(order: &[String]) -> [u8; 4] {
+    let mut result = [1u8, 2, 3, 4]; // default
+    let mapped: Vec<u8> = order.iter()
+        .filter_map(|s| match s.as_str() {
+            ":method"    => Some(1),
+            ":scheme"    => Some(2),
+            ":authority" => Some(3),
+            ":path"      => Some(4),
+            _            => None,
+        })
+        .collect();
+    if mapped.len() == 4 {
+        result.copy_from_slice(&mapped);
+    }
+    result
 }
 
 fn build_request(
