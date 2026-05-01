@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json as _json
 from typing import Any
 
 from rqsession._rust_core import BrowserSession as _RustSession, BrowserProfile
@@ -58,6 +59,13 @@ class BrowserSession:
         data: bytes | None = None,
         json: Any = None,
     ):
+        if json is not None and data is None:
+            data = _json.dumps(json).encode()
+            if headers is None:
+                headers = {"content-type": "application/json"}
+            elif "content-type" not in {k.lower() for k in headers}:
+                headers = {**headers, "content-type": "application/json"}
+            json = None
         return self._session.post(url, headers=headers, params=params, data=data, json=json)
 
     def request(
@@ -70,6 +78,13 @@ class BrowserSession:
         body: bytes | None = None,
         json: Any = None,
     ):
+        if json is not None and body is None:
+            body = _json.dumps(json).encode()
+            if headers is None:
+                headers = {"content-type": "application/json"}
+            elif "content-type" not in {k.lower() for k in headers}:
+                headers = {**headers, "content-type": "application/json"}
+            json = None
         return self._session.request(
             method, url, headers=headers, params=params, body=body, json=json
         )

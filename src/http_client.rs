@@ -21,14 +21,17 @@ use crate::tls_builder::build_ssl_connector;
 fn configure_alps(ssl: &boring::ssl::SslRef, protocols: &[String]) {
     for proto in protocols {
         let bytes = proto.as_bytes();
-        unsafe {
+        let ret = unsafe {
             boring_sys::SSL_add_application_settings(
                 ssl.as_ptr(),
                 bytes.as_ptr(),
                 bytes.len(),
                 std::ptr::null(),
                 0,
-            );
+            )
+        };
+        if ret != 1 {
+            eprintln!("[rqsession] WARN: SSL_add_application_settings failed for {proto:?} (ret={ret})");
         }
     }
 }
