@@ -30,7 +30,8 @@ Cloudflare、Akamai、DataDome 等反爬系统通过检查 TLS ClientHello 和 H
 pip install rqsession
 ```
 
-提供 Windows x86_64、Linux x86_64/aarch64、macOS x86_64/arm64 预编译 wheel。
+提供 **Windows x86_64** 和 **Linux x86_64**（Python 3.9+）预编译 wheel。  
+其他平台需本地安装 Rust 工具链从源码包编译。
 
 ---
 
@@ -87,16 +88,28 @@ asyncio.run(main())
 
 | 导入名 | 浏览器 | 系统 |
 |---|---|---|
+| `Chrome138` | Chrome 138 | Windows |
 | `Chrome120` | Chrome 120 | Windows |
 | `Chrome119` | Chrome 119 | Windows |
+| `Edge147` | Edge 147 | Windows |
 | `Edge142` | Edge 142 | Windows |
+| `Edge141` | Edge 141 | Windows |
+| `Firefox146` | Firefox 146 | Windows |
 | `Firefox133` | Firefox 133 | Windows |
+| `Tor128` | Tor Browser 128 | Windows |
 | `Safari17` | Safari 17 | macOS |
+| `MacosChrome140` | Chrome 140 | macOS |
+| `AndroidChrome114` | Chrome 114 | Android |
+| `Py37Aiohttp381` | Python aiohttp 3.8.1 | Windows |
 
 ```python
 from rqsession.rust_session import (
     BrowserSession, AsyncBrowserSession,
-    Chrome120, Chrome119, Edge142, Firefox133, Safari17,
+    Chrome138, Chrome120, Chrome119,
+    Edge147, Edge142, Edge141,
+    Firefox146, Firefox133,
+    Tor128, Safari17, MacosChrome140,
+    AndroidChrome114, Py37Aiohttp381,
 )
 ```
 
