@@ -7,15 +7,20 @@ pub fn split_cipher_lists(names: &[String]) -> (String, String) {
 
     for name in names {
         if is_tls13(name) {
-            // BoringSSL accepts IANA names directly for TLS 1.3
             tls13.push(name.as_str().to_owned());
         } else if let Some(ossl) = iana_to_openssl(name) {
             tls12.push(ossl.to_owned());
+        } else if !is_grease_cipher(name) {
+            eprintln!("[rqsession] WARN: unsupported cipher suite dropped: {name:?}");
         }
-        // GREASE and unknown → skip
     }
 
     (tls12.join(":"), tls13.join(":"))
+}
+
+fn is_grease_cipher(name: &str) -> bool {
+    // GREASE cipher names like "TLS_GREASE (0x0A0A)" or raw hex patterns
+    name.contains("GREASE") || name.contains("grease")
 }
 
 fn is_tls13(name: &str) -> bool {
@@ -53,7 +58,13 @@ fn iana_to_openssl(name: &str) -> Option<&'static str> {
 pub fn curves_to_groups_list(curves: &[String]) -> String {
     curves
         .iter()
-        .filter_map(|c| curve_name_to_group(c))
+        .filter_map(|c| {
+            let mapped = curve_name_to_group(c);
+            if mapped.is_none() && !is_grease_curve(c) {
+                eprintln!("[rqsession] WARN: unsupported curve dropped: {c:?}");
+            }
+            mapped
+        })
         .collect::<Vec<_>>()
         .join(":")
 }
@@ -65,10 +76,16 @@ fn curve_name_to_group(name: &str) -> Option<&'static str> {
         "secp384r1" | "P-384"                => Some("P-384"),
         "secp521r1" | "P-521"                => Some("P-521"),
         "x448"      => Some("X448"),
-        "ffdhe2048" => Some("ffdhe2048"),
-        "ffdhe3072" => Some("ffdhe3072"),
-        _           => None,
+        // Post-quantum / hybrid KEM (Chrome 124-130)
+        "x25519kyber768draft00" | "x25519kyber768" => Some("X25519Kyber768Draft00"),
+        // Post-quantum / hybrid KEM (Chrome 131+, boring 5.x required)
+        "x25519mlkem768" => Some("X25519MLKEM768"),
+        _ => None,
     }
+}
+
+fn is_grease_curve(name: &str) -> bool {
+    name.contains("grease") || name.contains("GREASE")
 }
 
 /// Encode ALPN protocols as the wire format expected by BoringSSL:

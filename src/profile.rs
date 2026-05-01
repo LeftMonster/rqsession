@@ -26,6 +26,16 @@ pub struct TlsConfig {
     /// Firefox/Safari do not send ALPS.
     #[serde(default)]
     pub alps: Vec<String>,
+    /// Enable OCSP stapling (status_request extension, id 5). Chromium-based browsers send this.
+    #[serde(default)]
+    pub ocsp_stapling: bool,
+    /// Enable signed certificate timestamps (SCT extension, id 18). Chromium-based browsers send this.
+    #[serde(default)]
+    pub sct: bool,
+    /// Certificate compression algorithms (compress_certificate extension, id 27).
+    /// Chromium advertises ["zlib", "brotli"]. Firefox/Safari do not send this.
+    #[serde(default)]
+    pub cert_compression: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

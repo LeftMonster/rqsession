@@ -33,8 +33,9 @@ brew install cmake
 ```toml
 pyo3                = { version = "0.22", features = ["extension-module"] }
 pyo3-async-runtimes = { version = "0.22", features = ["tokio-runtime"] }  # 异步版本必须
-boring              = "4"        # 实际解析到 4.21.2
-tokio-boring        = "4"
+boring              = "5"        # 4→5 升级于 2026-04-30，支持 X25519MLKEM768 (id 4588)
+boring-sys          = "5"
+tokio-boring        = "5"
 hyper               = { version = "1", features = ["http1", "http2"] }
 hyper-util          = { version = "0.1", features = ["tokio", "client", "http1", "http2"] }
 flate2              = "1"        # gzip / deflate 解压
@@ -95,6 +96,22 @@ features = ["pyo3/extension-module"]
 ---
 
 ## 编译问题修复记录
+
+### 问题 4：boring 4→5 升级 breaking change
+
+`SslMethod::tls_client()` 在 boring 5.x 中被重命名为 `SslMethod::tls()`。
+
+```rust
+// 修复前（boring 4.x，现已报错）
+SslConnector::builder(SslMethod::tls_client())
+
+// 修复后（boring 5.x）
+SslConnector::builder(SslMethod::tls())
+```
+
+boring 5.x 的其他新增：`X25519MLKEM768`（curve id 4588）、`X25519Kyber768Draft00` 继续保留（id 25497）。
+
+---
 
 ### 问题 1：`SslCurve::PRIME256V1` 不存在
 
