@@ -18,11 +18,16 @@ from .config_util import get_config_ini
 base_config = get_config_ini()
 # 默认配置
 DEFAULT_CONFIG = {
-    "host": base_config["RequestSession"]["host"],
-    "port": base_config["RequestSession"]["port"],
-    "enabled": base_config["RequestSession"]["use_proxy"] == "1",
+    # "host": base_config["RequestSession"]["host"],
+    # "port": base_config["RequestSession"]["port"],
+    # "enabled": base_config["RequestSession"]["use_proxy"] == "1",
+    # "random_proxy": False,
+    # "print_log": base_config["RequestSession"]["log"] == "1",
+    "host": "127.0.0.1",
+    "port": "7890",
+    "enabled": False,
     "random_proxy": False,
-    "print_log": base_config["RequestSession"]["log"] == "1",
+    "print_log": False,
     "proxy_file": "static/proxies.txt",
     "max_history_size": 100,
     "auto_headers": False,  # 设置默认的自动配置请求头、例如：Host、Referer、Origin 是否自动设置
