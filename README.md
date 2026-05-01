@@ -30,7 +30,8 @@ No external proxy process required — it's a compiled `.pyd` / `.so` extension,
 pip install rqsession
 ```
 
-Pre-built wheels are available for Windows x86_64, Linux x86_64/aarch64, and macOS x86_64/arm64.
+Pre-built wheels are available for **Windows x86_64** and **Linux x86_64** (Python 3.9+).  
+Other platforms require a local Rust toolchain to build from the source distribution.
 
 ---
 
@@ -87,16 +88,28 @@ asyncio.run(main())
 
 | Import name | Browser | OS |
 |---|---|---|
+| `Chrome138` | Chrome 138 | Windows |
 | `Chrome120` | Chrome 120 | Windows |
 | `Chrome119` | Chrome 119 | Windows |
+| `Edge147` | Edge 147 | Windows |
 | `Edge142` | Edge 142 | Windows |
+| `Edge141` | Edge 141 | Windows |
+| `Firefox146` | Firefox 146 | Windows |
 | `Firefox133` | Firefox 133 | Windows |
+| `Tor128` | Tor Browser 128 | Windows |
 | `Safari17` | Safari 17 | macOS |
+| `MacosChrome140` | Chrome 140 | macOS |
+| `AndroidChrome114` | Chrome 114 | Android |
+| `Py37Aiohttp381` | Python aiohttp 3.8.1 | Windows |
 
 ```python
 from rqsession.rust_session import (
     BrowserSession, AsyncBrowserSession,
-    Chrome120, Chrome119, Edge142, Firefox133, Safari17,
+    Chrome138, Chrome120, Chrome119,
+    Edge147, Edge142, Edge141,
+    Firefox146, Firefox133,
+    Tor128, Safari17, MacosChrome140,
+    AndroidChrome114, Py37Aiohttp381,
 )
 ```
 
