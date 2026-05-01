@@ -58,6 +58,7 @@ jobs:
               apt-get update && apt-get install -y cmake nasm clang || true
             fi
             rm -rf /opt/python/pp* 2>/dev/null || true
+            find /usr/local/bin /usr/bin -name 'pypy*' -delete 2>/dev/null || true
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
