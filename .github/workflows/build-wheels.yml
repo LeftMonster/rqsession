@@ -47,7 +47,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux }}
-          args: --release --out dist ${{ matrix.manylinux != 'off' && '--find-interpreter' || '' }}
+          args: --release --out dist --find-interpreter
           # Inside manylinux containers: cmake + NASM + clang for BoringSSL
           before-script-linux: |
             if command -v dnf &>/dev/null; then
