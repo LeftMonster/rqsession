@@ -62,7 +62,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux }}
-          args: --release --out dist --find-interpreter
+          args: --release --out dist
           # Inside manylinux containers: cmake + NASM + clang for BoringSSL
           before-script-linux: |
             if command -v yum &>/dev/null; then
