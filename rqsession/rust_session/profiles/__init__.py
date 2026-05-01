@@ -40,7 +40,7 @@ _cache: dict = {}
 def _get(name: str):
     if name not in _cache:
         path = _BUILTIN_DIR / f"{name}.json"
-        print("使用: {}".format(path))
+        # print("使用: {}".format(path))
         if not path.exists():
             raise FileNotFoundError(f"Built-in profile not found: {name}")
         _cache[name] = _load(path)
