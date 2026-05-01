@@ -26,22 +26,9 @@ jobs:
           - os: windows-latest
             target: x86_64
             manylinux: "off"
-          # macOS x86_64
-          - os: macos-13
-            target: x86_64
-            manylinux: "off"
-          # macOS arm64 (M1/M2)
-          - os: macos-14
-            target: aarch64
-            manylinux: "off"
 
     steps:
       - uses: actions/checkout@v4
-
-      # ── macOS: cmake required by BoringSSL ──────────────────────────────
-      - name: Install cmake (macOS)
-        if: runner.os == 'macOS'
-        run: brew install cmake
 
       # ── Windows: NASM required by BoringSSL asm optimisations ───────────
       - name: Install NASM (Windows)
@@ -62,7 +49,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux }}
-          args: --release --out dist
+          args: --release --out dist ${{ matrix.manylinux == 'auto' && '--find-interpreter' || '' }}
           # Inside manylinux containers: cmake + NASM + clang for BoringSSL
           before-script-linux: |
             if command -v yum &>/dev/null; then
