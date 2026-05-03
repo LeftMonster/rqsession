@@ -1,6 +1,6 @@
 # rust_session — 纯 Rust PyO3 TLS 指纹模块
 
-**版本：** 0.3.2  
+**版本：** 0.4.1  
 **创建时间：** 2026-04-27  
 **对应会话：** cd9fae2a（前半）+ 当前会话
 
@@ -145,16 +145,21 @@ resp = s.request(method, url, headers={}, params={}, body=b"...", json={})
 
 # 响应对象（兼容 requests.Response 风格）
 resp.status_code   # int
+resp.url           # str，最终响应的 URL（重定向后为目标 URL）
 resp.text          # str
 resp.content       # bytes
-resp.headers       # dict[str, str]
+resp.headers       # dict[str, str]（同名 header 只保留一个值）
 resp.json()        # dict/list（Python 原生类型）
 resp.ok            # bool（status < 400）
 resp.raise_for_status()  # status >= 400 时抛 RuntimeError
+resp.cookies       # dict[str, str]，本次响应 Set-Cookie 的所有 cookies
+                   # 正确处理多个 Set-Cookie header（get_all 提取，不按逗号切割）
+resp.history       # list[Response]，重定向链（不含最终响应），无重定向时为空列表
 
-# Cookie 管理
-s.update_cookies({"token": "abc"})  # 写入，后续请求自动带上
-# 自动从 Set-Cookie 响应头持久化 cookies（单值，不处理多值 set-cookie）
+# Session Cookie 管理
+s.cookies                           # dict[str, str]，当前 session 累积的所有 cookies
+s.update_cookies({"token": "abc"})  # 手动写入，后续请求自动带上
+# 每次请求后自动将 resp.cookies 合并进 session（含重定向中间响应的 cookies）
 
 # 上下文管理器
 with BrowserSession(Chrome120) as s:
@@ -213,11 +218,19 @@ list_custom()   # ['my_browser', ...]
 
 | Python 常量 | JSON 文件名 | 浏览器 |
 |---|---|---|
+| `Chrome138` | `chrome138_windows.json` | Chrome 138 / Windows |
 | `Chrome120` | `chrome120_windows.json` | Chrome 120 / Windows |
 | `Chrome119` | `chrome119_windows.json` | Chrome 119 / Windows |
+| `MacosChrome140` | `macos_chrome140.json` | Chrome 140 / macOS |
+| `Edge147` | `edge147_windows.json` | Edge 147 / Windows |
 | `Edge142` | `edge142_windows.json` | Edge 142 / Windows |
+| `Edge141` | `edge141_windows.json` | Edge 141 / Windows |
+| `Firefox146` | `firefox146_windows.json` | Firefox 146 / Windows |
 | `Firefox133` | `firefox133_windows.json` | Firefox 133 / Windows |
 | `Safari17` | `safari17_macos.json` | Safari 17 / macOS |
+| `Tor128` | `tor128_windows.json` | Tor Browser 128 / Windows |
+| `AndroidChrome114` | `android_chrome114.json` | Chrome 114 / Android |
+| `Py37Aiohttp381` | `py37_aiohttp381.json` | Python aiohttp 3.8.1（测试用） |
 
 添加新 profile：在 `profiles/builtin/` 或 `profiles/custom/` 放一个符合格式的 JSON 文件即可，无需修改代码。
 

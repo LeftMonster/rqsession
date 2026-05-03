@@ -1,6 +1,6 @@
 [project]
 name = "rqsession"
-version = "0.4.1"
+version = "0.4.2"
 description = "Browser TLS fingerprint impersonation library powered by Rust (BoringSSL + hyper)."
 authors = [
     {name = "leftmonster", email = "zhzhsgg@gmail.com"}

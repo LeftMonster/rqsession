@@ -284,22 +284,12 @@ impl PyBrowserSession {
             ))
             .map_err(|e| Into::<pyo3::PyErr>::into(e))?;
 
-        // Persist Set-Cookie headers into session cookie store
-        let sc_value = result.headers.get("set-cookie")
-            .or_else(|| result.headers.get("Set-Cookie"))
-            .cloned();
-        if let Some(sc) = sc_value {
-            for cookie in sc.split(',') {
-                if let Some((name_val, _)) = cookie.split_once(';') {
-                    if let Some((name, value)) = name_val.split_once('=') {
-                        self.session_cookies
-                            .lock()
-                            .unwrap()
-                            .insert(name.trim().to_owned(), value.trim().to_owned());
-                    }
-                }
-            }
+        // Persist cookies from all responses (redirects + final) into session cookie store
+        let mut sc = self.session_cookies.lock().unwrap();
+        for hist in &result.history {
+            sc.extend(hist.cookies.clone());
         }
+        sc.extend(result.cookies.clone());
 
         Ok(PyResponse::from_rust(result))
     }
@@ -591,22 +581,12 @@ impl PyAsyncBrowserSession {
             .await
             .map_err(|e| Into::<pyo3::PyErr>::into(e))?;
 
-            // Persist Set-Cookie headers into session cookie store
-            let sc_value = result
-                .headers
-                .get("set-cookie")
-                .or_else(|| result.headers.get("Set-Cookie"))
-                .cloned();
-            if let Some(sc) = sc_value {
-                let mut cookies = session_cookies.lock().unwrap();
-                for cookie in sc.split(',') {
-                    if let Some((name_val, _)) = cookie.split_once(';') {
-                        if let Some((name, value)) = name_val.split_once('=') {
-                            cookies.insert(name.trim().to_owned(), value.trim().to_owned());
-                        }
-                    }
-                }
+            // Persist cookies from all responses (redirects + final) into session cookie store
+            let mut sc = session_cookies.lock().unwrap();
+            for hist in &result.history {
+                sc.extend(hist.cookies.clone());
             }
+            sc.extend(result.cookies.clone());
 
             Python::with_gil(|py| Py::new(py, PyResponse::from_rust(result)))
         })

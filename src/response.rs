@@ -10,18 +10,14 @@ pub struct RustResponse {
     pub history: Vec<RustResponse>,
 }
 
-pub fn parse_cookies(headers: &HashMap<String, String>) -> HashMap<String, String> {
+/// Parse cookies from a slice of raw Set-Cookie header values (one element per header line).
+/// Splitting on ',' is intentionally avoided — Expires values contain commas.
+pub fn parse_cookies(set_cookie_headers: &[String]) -> HashMap<String, String> {
     let mut cookies = HashMap::new();
-    let sc = headers
-        .get("set-cookie")
-        .or_else(|| headers.get("Set-Cookie"));
-    if let Some(sc) = sc {
-        for cookie in sc.split(',') {
-            if let Some((name_val, _)) = cookie.split_once(';') {
-                if let Some((name, value)) = name_val.split_once('=') {
-                    cookies.insert(name.trim().to_owned(), value.trim().to_owned());
-                }
-            }
+    for header_value in set_cookie_headers {
+        let name_value = header_value.split(';').next().unwrap_or("").trim();
+        if let Some((name, value)) = name_value.split_once('=') {
+            cookies.insert(name.trim().to_owned(), value.trim().to_owned());
         }
     }
     cookies

@@ -1,6 +1,6 @@
 # rqsession 项目架构说明
 
-**版本：** 0.3.2  
+**版本：** 0.4.1  
 **核心目标：** 通过控制 TLS ClientHello 参数（cipher suites、extensions、curves 等）模拟真实浏览器的 TLS 指纹（JA3/JA4），使爬虫请求在指纹层面与真实浏览器无法区分。
 
 ---
