@@ -12,7 +12,7 @@ use foreign_types_shared::ForeignTypeRef;
 
 use crate::error::Error;
 use crate::profile::BrowserProfile;
-use crate::response::RustResponse;
+use crate::response::{parse_cookies, RustResponse};
 use crate::tls_builder::build_ssl_connector;
 
 /// Add ALPS (Application-Layer Protocol Settings, TLS extension 17513) per-connection.
@@ -52,6 +52,7 @@ pub async fn execute(
     let mut redirects = 0;
     let mut current_method = method.to_owned();
     let mut current_body = body;
+    let mut history: Vec<RustResponse> = Vec::new();
 
     loop {
         let resp = send_once(
@@ -86,10 +87,11 @@ pub async fn execute(
                 current_method = "GET".to_owned();
                 current_body = None;
             }
+            history.push(resp);
             continue;
         }
 
-        return Ok(resp);
+        return Ok(RustResponse { history, ..resp });
     }
 }
 
@@ -317,11 +319,14 @@ where
         .unwrap_or("");
     let body_bytes = decompress(raw.to_vec(), encoding)?;
 
+    let cookies = parse_cookies(&headers);
     Ok(RustResponse {
         status_code: status,
         headers,
         body: body_bytes,
         url: uri.to_string(),
+        cookies,
+        history: Vec::new(),
     })
 }
 
@@ -393,11 +398,14 @@ where
         .unwrap_or("");
     let body = decompress(raw, encoding)?;
 
+    let cookies = parse_cookies(&headers);
     Ok(RustResponse {
         status_code: status,
         headers,
         body,
         url: uri.to_string(),
+        cookies,
+        history: Vec::new(),
     })
 }
 

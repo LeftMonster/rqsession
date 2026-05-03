@@ -109,6 +109,18 @@ impl PyResponse {
         }
     }
 
+    #[getter]
+    fn cookies(&self) -> HashMap<String, String> {
+        self.inner.cookies.clone()
+    }
+
+    #[getter]
+    fn history(&self, py: Python<'_>) -> PyResult<Vec<Py<PyResponse>>> {
+        self.inner.history.iter()
+            .map(|r| Py::new(py, PyResponse::from_rust(r.clone())))
+            .collect()
+    }
+
     fn __repr__(&self) -> String {
         format!("<Response [{}]>", self.inner.status_code)
     }
@@ -304,6 +316,11 @@ impl PyBrowserSession {
     }
 
     #[getter]
+    fn cookies(&self) -> HashMap<String, String> {
+        self.session_cookies.lock().unwrap().clone()
+    }
+
+    #[getter]
     fn profile_name(&self) -> &str {
         &self.profile.name
     }
@@ -493,6 +510,11 @@ impl PyAsyncBrowserSession {
         for (k, v) in headers {
             sh.insert(k.to_lowercase(), v);
         }
+    }
+
+    #[getter]
+    fn cookies(&self) -> HashMap<String, String> {
+        self.session_cookies.lock().unwrap().clone()
     }
 
     #[getter]

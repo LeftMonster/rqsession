@@ -22,6 +22,16 @@ from .rust_session import (
     Edge142,
     Firefox133,
     Safari17,
+    BrowserSession,
+    AsyncBrowserSession,
+    AndroidChrome114,
+    MacosChrome140,
+    Chrome138,
+    Edge141,
+    Edge147,
+    Tor128,
+    Firefox146,
+    Py37Aiohttp381
 )
 
 # ── Legacy layers (backward compatibility) ───────────────────────────────────
@@ -40,6 +50,16 @@ __all__ = [
     "Edge142",
     "Firefox133",
     "Safari17",
+    "BrowserSession",
+    "AsyncBrowserSession",
+    "AndroidChrome114",
+    "MacosChrome140",
+    "Chrome138",
+    "Edge141",
+    "Edge147",
+    "Tor128",
+    "Firefox146",
+    "Py37Aiohttp38",
     # Legacy
     "RequestSession",
     "EnhancedRequestSession",
