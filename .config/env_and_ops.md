@@ -22,7 +22,30 @@ type: reference
 
 ---
 
-## 二、CI/CD
+## 二、本地 Rust 编译（开发调试）
+
+适用场景：修改了 `src/` 下的 Rust 代码后，需要重新编译让 `test_exmaple*.py` 等本地脚本生效。
+
+**安装方式说明**：项目通过 `rqsession.pth` editable install，Python 直接读取项目目录，编译后的 `.pyd` 落在 `rqsession/` 目录，无需重装包。
+
+```powershell
+# NASM 装在 C:\Program Files\NASM\ 但未加入系统 PATH，每次编译前加一下
+$env:PATH = "C:\Program Files\NASM;$env:PATH"
+$env:CONDA_PREFIX = "D:\anaconda"
+D:\anaconda\python.exe -m maturin develop --manifest-path D:\ownrepo-github\requestsession\Cargo.toml
+```
+
+编译完成后直接运行测试脚本即可，无需任何其他步骤：
+
+```powershell
+D:\anaconda\python.exe test_exmaple1.py
+```
+
+> `maturin develop` 产物为 debug 版 `.pyd`（无 LTO 优化，体积较大）。发布 wheel 走 CI/CD，不在本地执行。
+
+---
+
+## 三、CI/CD
 
 **触发方式**：`workflow_dispatch`（手动或 API 触发），无自动触发。
 
