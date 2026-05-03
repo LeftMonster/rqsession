@@ -9,7 +9,7 @@ Legacy API (pure Python):
     from rqsession import RequestSession, EnhancedRequestSession
 """
 
-__version__ = "0.3.2"
+__version__ = "0.4.2"
 __author__ = "Sherlock"
 __email__ = "zhzhsgg@gmail.com"
 

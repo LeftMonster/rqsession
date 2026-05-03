@@ -299,6 +299,13 @@ where
     let response = response_fut.await.map_err(|e| Error::Http(e.to_string()))?;
     let status = response.status().as_u16();
 
+    let set_cookies: Vec<String> = response
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .filter_map(|v| v.to_str().ok())
+        .map(|s| s.to_owned())
+        .collect();
     let headers: HashMap<String, String> = response
         .headers()
         .iter()
@@ -319,7 +326,7 @@ where
         .unwrap_or("");
     let body_bytes = decompress(raw.to_vec(), encoding)?;
 
-    let cookies = parse_cookies(&headers);
+    let cookies = parse_cookies(&set_cookies);
     Ok(RustResponse {
         status_code: status,
         headers,
@@ -378,6 +385,15 @@ where
     B::Error: std::fmt::Display,
 {
     let status = resp.status().as_u16();
+    // Collect all Set-Cookie values before consuming the response — HeaderMap supports
+    // multiple values for the same key, but HashMap would silently drop duplicates.
+    let set_cookies: Vec<String> = resp
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .filter_map(|v| v.to_str().ok())
+        .map(|s| s.to_owned())
+        .collect();
     let headers: HashMap<String, String> = resp
         .headers()
         .iter()
@@ -398,7 +414,7 @@ where
         .unwrap_or("");
     let body = decompress(raw, encoding)?;
 
-    let cookies = parse_cookies(&headers);
+    let cookies = parse_cookies(&set_cookies);
     Ok(RustResponse {
         status_code: status,
         headers,
