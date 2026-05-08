@@ -19,7 +19,7 @@ target/
 # Local / personal
 .claude/
 .idea/
-.config/MEMORY.md
+.config/
 tmp/
 
 # Unrelated subprojects
