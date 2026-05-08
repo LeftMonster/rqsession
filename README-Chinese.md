@@ -1,5 +1,7 @@
 # rqsession
 
+**中文** | [English](README.md)
+
 通过 Rust 原生扩展（BoringSSL + hyper + tokio）精确模拟真实浏览器 TLS 指纹的 Python HTTP 库。
 
 [![PyPI version](https://img.shields.io/pypi/v/rqsession.svg)](https://pypi.org/project/rqsession/)
@@ -253,7 +255,7 @@ asyncio.run(main())
 
 ```python
 from rqsession import RequestSession          # 基础 requests.Session 封装
-from rqsession import EnhancedRequestSession  # 通过本地 Rust 代理进程路由
+from rqsession import EnhancedRequestSession  # 携带浏览器 header 的 requests.Session 封装
 ```
 
 新项目请使用 `BrowserSession` / `AsyncBrowserSession`，无需外部进程，指纹更精确。

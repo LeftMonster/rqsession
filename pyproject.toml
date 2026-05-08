@@ -1,6 +1,6 @@
 [project]
 name = "rqsession"
-version = "0.4.2"
+version = "0.4.3"
 description = "Browser TLS fingerprint impersonation library powered by Rust (BoringSSL + hyper)."
 authors = [
     {name = "leftmonster", email = "zhzhsgg@gmail.com"}
@@ -12,6 +12,7 @@ dependencies = [
     "requests>=2.32.3",
     "curl-cffi>=0.7.0",
     "certifi>=2023.0.0",
+    "brotli>=1.0.9",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

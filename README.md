@@ -1,5 +1,7 @@
 # rqsession
 
+[中文](README-Chinese.md) | **English**
+
 A Python HTTP library that impersonates real browser TLS fingerprints, powered by a Rust native extension (BoringSSL + hyper + tokio).
 
 [![PyPI version](https://img.shields.io/pypi/v/rqsession.svg)](https://pypi.org/project/rqsession/)
@@ -253,7 +255,7 @@ Earlier versions of this library included `RequestSession` and `EnhancedRequestS
 
 ```python
 from rqsession import RequestSession          # basic requests.Session wrapper
-from rqsession import EnhancedRequestSession  # routes through a local Rust proxy process
+from rqsession import EnhancedRequestSession  # requests.Session wrapper with browser headers
 ```
 
 For new projects, use `BrowserSession` / `AsyncBrowserSession` instead — they are faster, require no external process, and provide more accurate fingerprinting.
