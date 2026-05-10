@@ -113,5 +113,9 @@ class AsyncBrowserSession:
         return self._session.cookies
 
     @property
+    def headers(self) -> dict[str, str]:
+        return self._session.headers
+
+    @property
     def profile_name(self) -> str:
         return self._session.profile_name

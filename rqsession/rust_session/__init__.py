@@ -1,6 +1,8 @@
 from .session import BrowserSession
 from .async_session import AsyncBrowserSession
 from .profiles import (
+    Android16Chrome135MiuiBrowser,
+    Android10Edge143,
     AndroidChrome114,
     MacosChrome140,
     Chrome138,
@@ -9,6 +11,7 @@ from .profiles import (
     Edge141,
     Edge142,
     Edge147,
+    Edge148,
     Tor128,
     Firefox133,
     Firefox146,
@@ -23,6 +26,8 @@ from rqsession._rust_core import load_profile, load_profile_json
 __all__ = [
     "BrowserSession",
     "AsyncBrowserSession",
+    "Android16Chrome135MiuiBrowser",
+    "Android10Edge143",
     "AndroidChrome114",
     "MacosChrome140",
     "Chrome138",

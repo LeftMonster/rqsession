@@ -311,6 +311,11 @@ impl PyBrowserSession {
     }
 
     #[getter]
+    fn headers(&self) -> HashMap<String, String> {
+        self.build_default_headers("").into_iter().collect()
+    }
+
+    #[getter]
     fn profile_name(&self) -> &str {
         &self.profile.name
     }
@@ -505,6 +510,11 @@ impl PyAsyncBrowserSession {
     #[getter]
     fn cookies(&self) -> HashMap<String, String> {
         self.session_cookies.lock().unwrap().clone()
+    }
+
+    #[getter]
+    fn headers(&self) -> HashMap<String, String> {
+        self.build_default_headers_async("").into_iter().collect()
     }
 
     #[getter]
