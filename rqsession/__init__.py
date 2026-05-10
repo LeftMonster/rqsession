@@ -37,7 +37,6 @@ from .rust_session import (
 # ── Legacy layers (backward compatibility) ───────────────────────────────────
 from .request_session import RequestSession
 from .enhanced_request_session import EnhancedRequestSession
-from .config_util import get_config_ini
 
 RqSession = EnhancedRequestSession
 

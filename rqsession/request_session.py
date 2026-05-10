@@ -12,17 +12,9 @@ from requests import HTTPError, Timeout
 from requests.exceptions import SSLError, ProxyError
 
 from .logger import logger
-from .config_util import get_config_ini
 
-
-base_config = get_config_ini()
 # 默认配置
 DEFAULT_CONFIG = {
-    # "host": base_config["RequestSession"]["host"],
-    # "port": base_config["RequestSession"]["port"],
-    # "enabled": base_config["RequestSession"]["use_proxy"] == "1",
-    # "random_proxy": False,
-    # "print_log": base_config["RequestSession"]["log"] == "1",
     "host": "127.0.0.1",
     "port": "7890",
     "enabled": False,

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 import json
-import httpx
+from curl_cffi.requests import AsyncSession
 
 
 # ========= 数据结构：对应 Rust 的 FingerprintInfo / TimingInfo / 响应 =========
@@ -226,26 +226,19 @@ class AsyncRustTLSProxyClient:
         self._health_endpoint = health_endpoint
         self._profiles_endpoint = profiles_endpoint
 
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: Optional[AsyncSession] = None
 
-    # --- httpx.AsyncClient 生命周期 ---
+    # --- AsyncSession 生命周期 ---
 
-    async def _ensure_client(self) -> httpx.AsyncClient:
-        if self._client is None or self._client.is_closed:
-            limits = httpx.Limits(
-                max_connections=self._max_connections,
-                max_keepalive_connections=self._max_connections,
-            )
-            self._client = httpx.AsyncClient(
-                base_url=self.base_url,
-                timeout=self._timeout,
-                limits=limits,
-            )
+    async def _ensure_client(self) -> AsyncSession:
+        if self._client is None:
+            self._client = AsyncSession()
         return self._client
 
     async def close(self) -> None:
-        if self._client is not None and not self._client.is_closed:
-            await self._client.aclose()
+        if self._client is not None:
+            self._client.close()
+            self._client = None
 
     async def __aenter__(self) -> "AsyncRustTLSProxyClient":
         await self._ensure_client()
@@ -262,7 +255,7 @@ class AsyncRustTLSProxyClient:
         """
         client = await self._ensure_client()
         try:
-            resp = await client.get(self._health_endpoint)
+            resp = await client.get(self.base_url + self._health_endpoint, timeout=self._timeout)
             return resp.status_code == 200
         except Exception:
             return False
@@ -278,7 +271,7 @@ class AsyncRustTLSProxyClient:
         }
         """
         client = await self._ensure_client()
-        resp = await client.get(self._health_endpoint)
+        resp = await client.get(self.base_url + self._health_endpoint, timeout=self._timeout)
         resp.raise_for_status()
         return resp.json()
 
@@ -293,7 +286,7 @@ class AsyncRustTLSProxyClient:
         }
         """
         client = await self._ensure_client()
-        resp = await client.get(self._profiles_endpoint)
+        resp = await client.get(self.base_url + self._profiles_endpoint, timeout=self._timeout)
         resp.raise_for_status()
         data = resp.json()
         profiles = data.get("profiles", [])
@@ -367,7 +360,7 @@ class AsyncRustTLSProxyClient:
 
         try:
             resp = await client.post(
-                self._advanced_endpoint,
+                self.base_url + self._advanced_endpoint,
                 json=payload,
                 timeout=timeout or self._timeout,
             )
