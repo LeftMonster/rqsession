@@ -1,8 +1,5 @@
 import json
-import logging
 from pathlib import Path
-
-_logger = logging.getLogger(__name__)
 
 _BUILTIN_DIR = Path(__file__).parent / "builtin"
 _CUSTOM_DIR = Path(__file__).parent / "custom"
@@ -40,26 +37,13 @@ def load_custom(name: str):
 _cache: dict = {}
 
 
-_FALLBACK_ORDER = [
-    "chrome138_windows", "chrome120_windows", "chrome119_windows",
-    "edge141_windows", "edge147_windows",
-]
-
-
 def _get(name: str):
     if name not in _cache:
         path = _BUILTIN_DIR / f"{name}.json"
+        # print("使用: {}".format(path))
         if not path.exists():
-            available = {p.stem for p in _BUILTIN_DIR.glob("*.json")}
-            fallback = next((p for p in _FALLBACK_ORDER if p in available), None)
-            if fallback is None:
-                fallback = next(iter(sorted(available)), None)
-            if fallback is None:
-                raise FileNotFoundError(f"Built-in profile not found: {name} (no profiles available)")
-            _logger.warning("Built-in profile not found: %s, falling back to: %s", name, fallback)
-            _cache[name] = _get(fallback)
-        else:
-            _cache[name] = _load(path)
+            raise FileNotFoundError(f"Built-in profile not found: {name}")
+        _cache[name] = _load(path)
     return _cache[name]
 
 
@@ -75,8 +59,6 @@ class _ProfileProxy:
         return _get(self._name)
 
 
-Android16Chrome135MiuiBrowser = _ProfileProxy("chrome135_MiuiBrowser_android16")
-Android10Edge143 = _ProfileProxy("chrome143_edge143_android10")
 AndroidChrome114 = _ProfileProxy("chrome114_android")
 MacosChrome140 = _ProfileProxy("chrome140_macos")
 Chrome138 = _ProfileProxy("chrome138_windows")
