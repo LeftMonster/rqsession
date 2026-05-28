@@ -1,6 +1,6 @@
 [project]
 name = "rqsession"
-version = "0.4.3"
+version = "0.4.4"
 description = "Browser TLS fingerprint impersonation library powered by Rust (BoringSSL + hyper)."
 authors = [
     {name = "leftmonster", email = "zhzhsgg@gmail.com"}
@@ -38,7 +38,7 @@ build-backend = "maturin"
 [tool.maturin]
 module-name = "rqsession._rust_core"
 python-source = "."
-features = ["pyo3/extension-module"]
+features = ["pyo3/extension-module", "pyo3/abi3-py38"]
 # Ensure JSON profile files are bundled into the wheel
 include = [
     "rqsession/rust_session/profiles/builtin/*.json",
