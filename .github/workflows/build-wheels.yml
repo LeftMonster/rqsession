@@ -18,8 +18,8 @@ jobs:
           - os: ubuntu-latest
             target: x86_64
             manylinux: "2_28"
-          # Linux aarch64 (manylinux, cross-compiled)
-          - os: ubuntu-latest
+          # Linux aarch64 (manylinux, native ARM64 runner — avoids cross-compile bindgen sysroot issues)
+          - os: ubuntu-22.04-arm
             target: aarch64
             manylinux: "2_28"
           # Windows x86_64
@@ -51,14 +51,19 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux }}
           args: --release --out dist
-          # Runs inside the manylinux container before maturin build (Linux only)
+          # Runs inside the manylinux container before maturin build (Linux only).
+          # NASM is only needed on x86_64 (BoringSSL ARM assembly uses the system assembler).
           before-script-linux: |
+            ARCH=$(uname -m)
             if command -v dnf &>/dev/null; then
-              dnf install -y cmake nasm clang llvm-devel
+              dnf install -y cmake clang llvm-devel
+              [ "$ARCH" = "x86_64" ] && dnf install -y nasm || true
             elif command -v yum &>/dev/null; then
-              yum install -y cmake3 nasm clang && ln -sf cmake3 /usr/bin/cmake || true
+              yum install -y cmake3 clang && ln -sf cmake3 /usr/bin/cmake || true
+              [ "$ARCH" = "x86_64" ] && yum install -y nasm || true
             else
-              apt-get update && apt-get install -y cmake nasm clang || true
+              apt-get update && apt-get install -y cmake clang || true
+              [ "$ARCH" = "x86_64" ] && apt-get install -y nasm || true
             fi
             rm -rf /opt/python/pp* 2>/dev/null || true
             find /usr/local/bin /usr/bin -name 'pypy*' -delete 2>/dev/null || true
