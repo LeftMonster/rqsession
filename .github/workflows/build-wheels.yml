@@ -18,6 +18,10 @@ jobs:
           - os: ubuntu-latest
             target: x86_64
             manylinux: "2_28"
+          # Linux aarch64 (manylinux, cross-compiled)
+          - os: ubuntu-latest
+            target: aarch64
+            manylinux: "2_28"
           # Windows x86_64
           - os: windows-latest
             target: x86_64
@@ -26,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ── Windows: NASM required by BoringSSL asm optimisations ───────────
+      # Windows only: NASM required by BoringSSL x86_64 assembly
       - name: Install NASM (Windows)
         if: runner.os == 'Windows'
         uses: ilammy/setup-nasm@v1
@@ -39,7 +43,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # ── Build wheels ─────────────────────────────────────────────────────
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         env:
@@ -48,7 +51,7 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux }}
           args: --release --out dist
-          # Inside manylinux containers: cmake + NASM + clang for BoringSSL
+          # Runs inside the manylinux container before maturin build (Linux only)
           before-script-linux: |
             if command -v dnf &>/dev/null; then
               dnf install -y cmake nasm clang llvm-devel
@@ -66,7 +69,7 @@ jobs:
           name: wheels-${{ matrix.os }}-${{ matrix.target }}
           path: dist/
 
-  # ── Source distribution (fallback for unsupported platforms) ─────────────
+  # Source distribution — fallback for platforms without a pre-built wheel
   sdist:
     name: Build sdist
     runs-on: ubuntu-latest
@@ -81,7 +84,7 @@ jobs:
           name: wheels-sdist
           path: dist/
 
-  # ── Publish all wheels + sdist to PyPI on tag push ───────────────────────
+  # Publish all wheels + sdist to PyPI on tag push
   release:
     name: Publish to PyPI
     runs-on: ubuntu-latest
