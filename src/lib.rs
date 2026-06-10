@@ -591,12 +591,16 @@ impl PyAsyncBrowserSession {
             .await
             .map_err(|e| Into::<pyo3::PyErr>::into(e))?;
 
-            // Persist cookies from all responses (redirects + final) into session cookie store
-            let mut sc = session_cookies.lock().unwrap();
-            for hist in &result.history {
-                sc.extend(hist.cookies.clone());
+            // Persist cookies — must release the mutex before calling Python::with_gil(),
+            // otherwise: Tokio holds mutex waiting for GIL while Python holds GIL waiting
+            // for the same mutex → deadlock under concurrent coroutines.
+            {
+                let mut sc = session_cookies.lock().unwrap();
+                for hist in &result.history {
+                    sc.extend(hist.cookies.clone());
+                }
+                sc.extend(result.cookies.clone());
             }
-            sc.extend(result.cookies.clone());
 
             Python::with_gil(|py| Py::new(py, PyResponse::from_rust(result)))
         })
