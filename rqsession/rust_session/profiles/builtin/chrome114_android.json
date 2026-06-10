@@ -41,7 +41,12 @@
     "alpn": [
       "h2",
       "http/1.1"
-    ]
+    ],
+    "grease": true,
+    "ocsp_stapling": true,
+    "sct": true,
+    "cert_compression": ["zlib", "brotli"],
+    "alps": ["h2"]
   },
   "http2": {
     "settings": {

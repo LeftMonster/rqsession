@@ -115,7 +115,7 @@ pub fn build_ssl_connector(config: &TlsConfig, verify: bool, ca_bundle: Option<&
             "brotli" => builder
                 .add_certificate_compression_algorithm(BrotliCertDecompressor)
                 .map_err(|e| Error::Tls(e.to_string()))?,
-            other => return Err(Error::Tls(format!("unsupported cert compression: {other}"))),
+            other => eprintln!("[rqsession] WARN: unsupported cert compression dropped: {other:?}"),
         }
     }
 

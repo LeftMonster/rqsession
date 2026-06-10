@@ -61,6 +61,7 @@ class _ProfileProxy:
 
 AndroidChrome114 = _ProfileProxy("chrome114_android")
 MacosChrome140 = _ProfileProxy("chrome140_macos")
+Chrome147 = _ProfileProxy("chrome147_windows")
 Chrome138 = _ProfileProxy("chrome138_windows")
 Chrome120 = _ProfileProxy("chrome120_windows")
 Chrome119 = _ProfileProxy("chrome119_windows")
@@ -73,3 +74,5 @@ Firefox133 = _ProfileProxy("firefox133_windows")
 Firefox146 = _ProfileProxy("firefox146_windows")
 Safari17  = _ProfileProxy("safari17_macos")
 Py37Aiohttp381  = _ProfileProxy("py37_aiohttp381_windows")
+Android16Chrome135MiuiBrowser = _ProfileProxy("chrome135_MiuiBrowser_android16")
+Android10Edge143 = _ProfileProxy("chrome143_edge143_android10")

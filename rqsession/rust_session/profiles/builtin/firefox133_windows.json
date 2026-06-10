@@ -35,7 +35,9 @@
       "rsa_pkcs1_sha384",
       "rsa_pkcs1_sha512"
     ],
-    "alpn": ["h2", "http/1.1"]
+    "alpn": ["h2", "http/1.1"],
+    "ocsp_stapling": true,
+    "sct": true
   },
   "http2": {
     "settings": {

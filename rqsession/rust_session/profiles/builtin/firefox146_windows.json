@@ -48,7 +48,9 @@
     "alpn": [
       "h2",
       "http/1.1"
-    ]
+    ],
+    "ocsp_stapling": true,
+    "sct": true
   },
   "http2": {
     "settings": {

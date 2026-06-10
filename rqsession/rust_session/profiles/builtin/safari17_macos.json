@@ -35,7 +35,11 @@
       "rsa_pkcs1_sha384",
       "rsa_pkcs1_sha512"
     ],
-    "alpn": ["h2", "http/1.1"]
+    "alpn": ["h2", "http/1.1"],
+    "grease": true,
+    "ocsp_stapling": true,
+    "sct": true,
+    "cert_compression": ["brotli"]
   },
   "http2": {
     "settings": {
