@@ -47,8 +47,15 @@ class BrowserSession:
 
     # ── HTTP verbs ────────────────────────────────────────────────────────────
 
-    def get(self, url: str, *, headers: dict | None = None, params: dict | None = None):
-        return self._session.get(url, headers=headers, params=params)
+    def get(
+        self,
+        url: str,
+        *,
+        headers: dict | None = None,
+        params: dict | None = None,
+        allow_redirects: bool = True,
+    ):
+        return self._session.get(url, headers=headers, params=params, allow_redirects=allow_redirects)
 
     def post(
         self,
@@ -58,6 +65,7 @@ class BrowserSession:
         params: dict | None = None,
         data: bytes | None = None,
         json: Any = None,
+        allow_redirects: bool = True,
     ):
         if json is not None and data is None:
             data = _json.dumps(json).encode()
@@ -66,7 +74,7 @@ class BrowserSession:
             elif "content-type" not in {k.lower() for k in headers}:
                 headers = {**headers, "content-type": "application/json"}
             json = None
-        return self._session.post(url, headers=headers, params=params, data=data, json=json)
+        return self._session.post(url, headers=headers, params=params, data=data, json=json, allow_redirects=allow_redirects)
 
     def request(
         self,
@@ -77,6 +85,7 @@ class BrowserSession:
         params: dict | None = None,
         body: bytes | None = None,
         json: Any = None,
+        allow_redirects: bool = True,
     ):
         if json is not None and body is None:
             body = _json.dumps(json).encode()
@@ -86,7 +95,7 @@ class BrowserSession:
                 headers = {**headers, "content-type": "application/json"}
             json = None
         return self._session.request(
-            method, url, headers=headers, params=params, body=body, json=json
+            method, url, headers=headers, params=params, body=body, json=json, allow_redirects=allow_redirects
         )
 
     # ── Context manager ───────────────────────────────────────────────────────
