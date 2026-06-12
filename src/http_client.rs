@@ -465,53 +465,235 @@ fn decompress(raw: Vec<u8>, encoding: &str) -> Result<Vec<u8>, Error> {
     }
 }
 
-/// HTTP CONNECT tunnel through a proxy.
+// ── Proxy helpers ────────────────────────────────────────────────────────────
+
+/// Extract (username, password) from a proxy URL string.
+/// Handles `scheme://user:pass@host:port`; percent-decodes `%XX` sequences.
+fn parse_proxy_userinfo(proxy: &str) -> (Option<String>, Option<String>) {
+    let after_scheme = match proxy.find("://") {
+        Some(i) => &proxy[i + 3..],
+        None    => proxy,
+    };
+    let at = match after_scheme.rfind('@') {
+        Some(i) => i,
+        None    => return (None, None),
+    };
+    let userinfo = &after_scheme[..at];
+    match userinfo.find(':') {
+        Some(c) => (
+            Some(percent_decode(userinfo[..c].as_bytes())),
+            Some(percent_decode(userinfo[c + 1..].as_bytes())),
+        ),
+        None => (Some(percent_decode(userinfo.as_bytes())), None),
+    }
+}
+
+fn percent_decode(input: &[u8]) -> String {
+    let mut out = Vec::with_capacity(input.len());
+    let mut i = 0;
+    while i < input.len() {
+        if input[i] == b'%' && i + 2 < input.len() {
+            if let (Some(h), Some(l)) = (
+                (input[i + 1] as char).to_digit(16),
+                (input[i + 2] as char).to_digit(16),
+            ) {
+                out.push(((h << 4) | l) as u8);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(input[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+fn base64_encode(input: &[u8]) -> String {
+    const T: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity((input.len() + 2) / 3 * 4);
+    for chunk in input.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = chunk.get(1).copied().unwrap_or(0) as u32;
+        let b2 = chunk.get(2).copied().unwrap_or(0) as u32;
+        let n  = (b0 << 16) | (b1 << 8) | b2;
+        out.push(T[((n >> 18) & 63) as usize] as char);
+        out.push(T[((n >> 12) & 63) as usize] as char);
+        out.push(if chunk.len() > 1 { T[((n >>  6) & 63) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 2 { T[(n & 63) as usize] as char } else { '=' });
+    }
+    out
+}
+
+// ── Per-protocol tunnel functions ─────────────────────────────────────────────
+
+async fn connect_via_http_proxy(
+    proxy_host: &str, proxy_port: u16,
+    target_host: &str, target_port: u16,
+    username: Option<&str>, password: Option<&str>,
+) -> Result<TcpStream, Error> {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let mut tcp = TcpStream::connect(format!("{proxy_host}:{proxy_port}"))
+        .await.map_err(|e| Error::Io(e.to_string()))?;
+
+    let mut req = format!(
+        "CONNECT {target_host}:{target_port} HTTP/1.1\r\n\
+         Host: {target_host}:{target_port}\r\n\
+         Proxy-Connection: keep-alive\r\n"
+    );
+    if let Some(user) = username {
+        let pass = password.unwrap_or("");
+        let creds = base64_encode(format!("{user}:{pass}").as_bytes());
+        req.push_str(&format!("Proxy-Authorization: Basic {creds}\r\n"));
+    }
+    req.push_str("\r\n");
+    tcp.write_all(req.as_bytes()).await.map_err(|e| Error::Io(e.to_string()))?;
+
+    let mut buf = Vec::new();
+    let mut tmp = [0u8; 1];
+    loop {
+        tcp.read_exact(&mut tmp).await.map_err(|e| Error::Io(e.to_string()))?;
+        buf.push(tmp[0]);
+        if buf.ends_with(b"\r\n\r\n") { break; }
+        if buf.len() > 4096 { return Err(Error::Http("proxy CONNECT response too large".into())); }
+    }
+    let status_line = std::str::from_utf8(&buf).unwrap_or("").lines().next().unwrap_or("");
+    if !status_line.contains("200") {
+        return Err(Error::Http(format!("proxy CONNECT failed: {status_line}")));
+    }
+    Ok(tcp)
+}
+
+/// SOCKS5 tunnel — RFC 1928 + RFC 1929. Always uses ATYP=0x03 (domain name),
+/// so DNS is resolved by the proxy, not the client.
+async fn connect_via_socks5(
+    proxy_host: &str, proxy_port: u16,
+    target_host: &str, target_port: u16,
+    username: Option<&str>, password: Option<&str>,
+) -> Result<TcpStream, Error> {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let mut tcp = TcpStream::connect(format!("{proxy_host}:{proxy_port}"))
+        .await.map_err(|e| Error::Io(e.to_string()))?;
+
+    // Greeting: offer no-auth (0x00) + user/pass (0x02) when credentials present
+    let greeting: &[u8] = if username.is_some() { &[0x05, 0x02, 0x00, 0x02] }
+                          else                   { &[0x05, 0x01, 0x00]        };
+    tcp.write_all(greeting).await.map_err(|e| Error::Io(e.to_string()))?;
+
+    let mut sel = [0u8; 2];
+    tcp.read_exact(&mut sel).await.map_err(|e| Error::Io(e.to_string()))?;
+    if sel[0] != 0x05 { return Err(Error::Http("SOCKS5: server version mismatch".into())); }
+
+    match sel[1] {
+        0x00 => {} // no auth required
+        0x02 => {
+            // RFC 1929 username/password sub-negotiation
+            let user = username.unwrap_or("").as_bytes();
+            let pass = password.unwrap_or("").as_bytes();
+            if user.len() > 255 || pass.len() > 255 {
+                return Err(Error::Http("SOCKS5: credentials exceed 255 bytes".into()));
+            }
+            let mut auth = Vec::with_capacity(3 + user.len() + pass.len());
+            auth.push(0x01);
+            auth.push(user.len() as u8); auth.extend_from_slice(user);
+            auth.push(pass.len() as u8); auth.extend_from_slice(pass);
+            tcp.write_all(&auth).await.map_err(|e| Error::Io(e.to_string()))?;
+            let mut ar = [0u8; 2];
+            tcp.read_exact(&mut ar).await.map_err(|e| Error::Io(e.to_string()))?;
+            if ar[1] != 0x00 { return Err(Error::Http("SOCKS5: authentication failed".into())); }
+        }
+        0xFF => return Err(Error::Http("SOCKS5: no acceptable auth method".into())),
+        m    => return Err(Error::Http(format!("SOCKS5: unexpected auth method {m:#04x}"))),
+    }
+
+    // CONNECT request
+    let host_b = target_host.as_bytes();
+    if host_b.len() > 255 { return Err(Error::Http("SOCKS5: hostname too long".into())); }
+    let mut req = Vec::with_capacity(7 + host_b.len());
+    req.extend_from_slice(&[0x05, 0x01, 0x00, 0x03, host_b.len() as u8]);
+    req.extend_from_slice(host_b);
+    req.push((target_port >> 8) as u8);
+    req.push((target_port & 0xFF) as u8);
+    tcp.write_all(&req).await.map_err(|e| Error::Io(e.to_string()))?;
+
+    // Response header (4 bytes: VER REP RSV ATYP)
+    let mut hdr = [0u8; 4];
+    tcp.read_exact(&mut hdr).await.map_err(|e| Error::Io(e.to_string()))?;
+    if hdr[0] != 0x05 { return Err(Error::Http("SOCKS5: invalid response".into())); }
+    if hdr[1] != 0x00 { return Err(Error::Http(format!("SOCKS5: connect failed REP={:#04x}", hdr[1]))); }
+
+    // Drain bound-address bytes (not needed)
+    match hdr[3] {
+        0x01 => { let mut s = [0u8;  6]; tcp.read_exact(&mut s).await.map_err(|e| Error::Io(e.to_string()))?; }
+        0x03 => {
+            let mut l = [0u8; 1]; tcp.read_exact(&mut l).await.map_err(|e| Error::Io(e.to_string()))?;
+            let mut s = vec![0u8; l[0] as usize + 2];
+            tcp.read_exact(&mut s).await.map_err(|e| Error::Io(e.to_string()))?;
+        }
+        0x04 => { let mut s = [0u8; 18]; tcp.read_exact(&mut s).await.map_err(|e| Error::Io(e.to_string()))?; }
+        t    => return Err(Error::Http(format!("SOCKS5: unknown ATYP {t:#04x}"))),
+    }
+    Ok(tcp)
+}
+
+/// SOCKS4a tunnel — sends domain name to the proxy (fake IP 0.0.0.1).
+async fn connect_via_socks4a(
+    proxy_host: &str, proxy_port: u16,
+    target_host: &str, target_port: u16,
+    username: Option<&str>,
+) -> Result<TcpStream, Error> {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let mut tcp = TcpStream::connect(format!("{proxy_host}:{proxy_port}"))
+        .await.map_err(|e| Error::Io(e.to_string()))?;
+
+    let host_b = target_host.as_bytes();
+    let user   = username.unwrap_or("").as_bytes();
+    let mut req = Vec::with_capacity(10 + user.len() + host_b.len());
+    req.extend_from_slice(&[
+        0x04, 0x01,                        // VN=4, CD=1 (CONNECT)
+        (target_port >> 8) as u8,
+        (target_port & 0xFF) as u8,
+        0x00, 0x00, 0x00, 0x01,            // fake IP signals SOCKS4a domain follows
+    ]);
+    req.extend_from_slice(user); req.push(0x00);   // USERID\0
+    req.extend_from_slice(host_b); req.push(0x00); // HOSTNAME\0
+    tcp.write_all(&req).await.map_err(|e| Error::Io(e.to_string()))?;
+
+    let mut resp = [0u8; 8];
+    tcp.read_exact(&mut resp).await.map_err(|e| Error::Io(e.to_string()))?;
+    if resp[1] != 0x5A {
+        return Err(Error::Http(format!("SOCKS4a: connect refused code={:#04x}", resp[1])));
+    }
+    Ok(tcp)
+}
+
+// ── Main dispatcher ───────────────────────────────────────────────────────────
+
 async fn connect_via_proxy(proxy: &str, target_host: &str, target_port: u16) -> Result<TcpStream, Error> {
     let proxy_uri: Uri = proxy
         .parse()
         .map_err(|e| Error::InvalidUrl(format!("proxy: {e}")))?;
-    let proxy_host = proxy_uri.host().ok_or_else(|| Error::InvalidUrl("proxy missing host".into()))?;
-    let proxy_port = proxy_uri
-        .port_u16()
-        .unwrap_or(if proxy_uri.scheme_str() == Some("https") { 443 } else { 8080 });
+    let scheme     = proxy_uri.scheme_str().unwrap_or("http");
+    let proxy_host = proxy_uri.host()
+        .ok_or_else(|| Error::InvalidUrl("proxy missing host".into()))?;
+    let proxy_port = proxy_uri.port_u16().unwrap_or(match scheme {
+        "https"                          => 443,
+        "socks5" | "socks5h" | "socks"
+        | "socks4" | "socks4a"           => 1080,
+        _                                => 8080,
+    });
+    let (username, password) = parse_proxy_userinfo(proxy);
+    let user = username.as_deref();
+    let pass = password.as_deref();
 
-    let mut tcp = TcpStream::connect(format!("{proxy_host}:{proxy_port}"))
-        .await
-        .map_err(|e| Error::Io(e.to_string()))?;
-
-    // Send CONNECT
-    use tokio::io::{AsyncReadExt, AsyncWriteExt};
-    let connect_req = format!("CONNECT {target_host}:{target_port} HTTP/1.1\r\nHost: {target_host}:{target_port}\r\nProxy-Connection: keep-alive\r\n\r\n");
-    tcp.write_all(connect_req.as_bytes())
-        .await
-        .map_err(|e| Error::Io(e.to_string()))?;
-
-    // Read response until \r\n\r\n
-    let mut buf = Vec::new();
-    let mut tmp = [0u8; 1];
-    loop {
-        tcp.read_exact(&mut tmp)
-            .await
-            .map_err(|e| Error::Io(e.to_string()))?;
-        buf.push(tmp[0]);
-        if buf.ends_with(b"\r\n\r\n") {
-            break;
-        }
-        if buf.len() > 4096 {
-            return Err(Error::Http("proxy CONNECT response too large".into()));
-        }
+    match scheme {
+        "http" | "https" =>
+            connect_via_http_proxy(proxy_host, proxy_port, target_host, target_port, user, pass).await,
+        "socks5" | "socks5h" | "socks" =>
+            connect_via_socks5(proxy_host, proxy_port, target_host, target_port, user, pass).await,
+        "socks4" | "socks4a" =>
+            connect_via_socks4a(proxy_host, proxy_port, target_host, target_port, user).await,
+        _ => Err(Error::InvalidUrl(format!("unsupported proxy scheme: {scheme}"))),
     }
-
-    let status_line = std::str::from_utf8(&buf)
-        .unwrap_or("")
-        .lines()
-        .next()
-        .unwrap_or("");
-    if !status_line.contains("200") {
-        return Err(Error::Http(format!("proxy CONNECT failed: {}", status_line)));
-    }
-
-    Ok(tcp)
 }
 
 fn resolve_url(base: &str, location: &str) -> Result<String, Error> {
