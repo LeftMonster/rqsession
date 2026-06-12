@@ -47,6 +47,7 @@ pub async fn execute(
     proxy: Option<&str>,
     verify: bool,
     ca_bundle: Option<&str>,
+    allow_redirects: bool,
 ) -> Result<RustResponse, Error> {
     let mut current_url = url.to_owned();
     let mut redirects = 0;
@@ -70,7 +71,7 @@ pub async fn execute(
         let status = resp.status_code;
 
         // Handle redirects
-        if matches!(status, 301 | 302 | 303 | 307 | 308) && redirects < MAX_REDIRECTS {
+        if allow_redirects && matches!(status, 301 | 302 | 303 | 307 | 308) && redirects < MAX_REDIRECTS {
             let location = resp
                 .headers
                 .get("location")
@@ -362,9 +363,16 @@ fn build_request(
     headers: &[(String, String)],
     body: Option<Vec<u8>>,
 ) -> Result<Request<Full<Bytes>>, Error> {
+    // HTTP/1.1 direct connections use origin-form request target ("/path?query"),
+    // not absolute-form ("http://host/path"). Absolute-form is only for proxy requests.
+    let path_query = uri
+        .path_and_query()
+        .map(|pq| pq.as_str())
+        .unwrap_or("/");
+
     let mut builder = Request::builder()
         .method(method)
-        .uri(uri);
+        .uri(path_query);
 
     for (k, v) in headers {
         builder = builder.header(k.as_str(), v.as_str());

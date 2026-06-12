@@ -1,6 +1,6 @@
 # rqsession 项目架构说明
 
-**版本：** 0.4.1  
+**版本：** 0.4.6（2026-06-12 更新）  
 **核心目标：** 通过控制 TLS ClientHello 参数（cipher suites、extensions、curves 等）模拟真实浏览器的 TLS 指纹（JA3/JA4），使爬虫请求在指纹层面与真实浏览器无法区分。
 
 ---
@@ -44,7 +44,7 @@
 | Cookie 管理 | 按域名分组存储，支持从字符串/字典/完整 cookie 对象导入 |
 | 请求历史 | 在内存中保留最近 N 条请求记录，可导出为 JSON (`export_request_chain()`) |
 
-配置从 `rqsession/config.ini` 读取（代理地址/端口、是否启用代理、日志开关）。
+默认配置硬编码在 `DEFAULT_CONFIG` 中（代理地址/端口默认 127.0.0.1:7890，默认不启用代理）。`config.ini` / `config_util.py` 已于 v0.4.3 删除。
 
 ---
 
@@ -120,7 +120,7 @@ BrowserProfile
 
 #### 异步 Rust 路径（`AsyncRustTLSProxyClient`）
 
-使用 `httpx.AsyncClient` 异步调用 Rust 服务的 `/advanced_fetch`，结构上与 Layer 2 的同步版本等价，适用于 asyncio 场景。
+使用 `curl_cffi.requests.AsyncSession` 异步调用 Rust 服务的 `/advanced_fetch`，结构上与 Layer 2 的同步版本等价，适用于 asyncio 场景。
 
 #### TLS 指纹数据库
 
@@ -165,7 +165,6 @@ JA3 hash 用 SHA-256 计算（目前用 SHA-256 而非 MD5，与标准 JA3 hash 
 
 | 文件 | 作用 |
 |---|---|
-| `rqsession/config.ini` | 代理地址/端口、是否启用代理、日志开关（被 `config_util.py` 读取） |
 | `rqsession/.env` | 环境变量 |
 | `rqsession/static/useragents.txt` | UA 列表（`RequestSession.initialize_session()` 随机选用） |
 | `rqsession/static/proxies.txt` | 代理列表（`RequestSession` 随机轮换） |
@@ -187,3 +186,18 @@ JA3 hash 用 SHA-256 计算（目前用 SHA-256 而非 MD5，与标准 JA3 hash 
 | Profile 扩展 | JSON 文件，自行添加 | 代码内写死 | 代码内写死 |
 | 使用场景 | 所有需要精确指纹的场景 | 兼容旧代码 | 需要精确 JA3 匹配 |
 | 降级 | 无（直接报错） | 自动降级为标准 requests | 自动降级为 impersonate |
+| allow_redirects | ✓ 支持，默认 True | — | — |
+
+---
+
+## v0.4.6 变更记录（2026-06-12）
+
+### 新增
+- `BrowserSession` / `AsyncBrowserSession` 的 `get` / `post` / `request` 均新增 `allow_redirects: bool = True` 参数，与 `requests` 行为一致：`False` 时直接返回 3xx 响应，`Set-Cookie` 仍写入 session。
+
+### Bug 修复
+- **sync GIL/IOCP 死锁**：`BrowserSession.request` 持有 Python GIL 调用 `block_on`，导致 Windows IOCP 无法投递 I/O 完成事件，所有明文 HTTP 请求永久挂死。改用 `py.allow_threads()` 包裹 `block_on` 修复。HTTPS 请求以前碰巧能跑，现在两者走统一正确路径。
+- **HTTP/1.1 请求行格式错误**：`build_request` 将完整 URI（`GET http://host/path HTTP/1.1`）写入请求行（absolute-form），不符合 RFC 7230 直连规定。改用 `uri.path_and_query()` 输出 origin-form（`GET /path HTTP/1.1`）。不影响 TLS 指纹，对 HTTPS 为向前兼容修复。
+
+### 内部调整
+- `BrowserSession` 的 Tokio runtime 从 `multi_thread` 改为 `current_thread`，与 `block_on` 单次串行请求的使用模式匹配，减少不必要的线程开销。

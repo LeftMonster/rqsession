@@ -178,7 +178,9 @@ impl PyBrowserSession {
         verify: bool,
         ca_bundle: Option<String>,
     ) -> PyResult<Self> {
-        let runtime = tokio::runtime::Runtime::new()
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
             .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
         Ok(Self {
             profile: Arc::new(profile.inner.clone()),
@@ -192,40 +194,46 @@ impl PyBrowserSession {
     }
 
     /// GET request.
-    #[pyo3(signature = (url, headers=None, params=None))]
+    #[pyo3(signature = (url, headers=None, params=None, allow_redirects=true))]
     fn get(
         &self,
+        py: Python<'_>,
         url: String,
         headers: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
+        allow_redirects: bool,
     ) -> PyResult<PyResponse> {
-        self.request("GET", url, headers, params, None, None)
+        self.request(py, "GET", url, headers, params, None, None, allow_redirects)
     }
 
     /// POST request.
-    #[pyo3(signature = (url, headers=None, params=None, data=None, json=None))]
+    #[pyo3(signature = (url, headers=None, params=None, data=None, json=None, allow_redirects=true))]
     fn post(
         &self,
+        py: Python<'_>,
         url: String,
         headers: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
         data: Option<Vec<u8>>,
         json: Option<HashMap<String, String>>,
+        allow_redirects: bool,
     ) -> PyResult<PyResponse> {
         let body = resolve_post_body(data, json)?;
-        self.request("POST", url, headers, params, Some(body), None)
+        self.request(py, "POST", url, headers, params, Some(body), None, allow_redirects)
     }
 
     /// Generic request.
-    #[pyo3(signature = (method, url, headers=None, params=None, body=None, json=None))]
+    #[pyo3(signature = (method, url, headers=None, params=None, body=None, json=None, allow_redirects=true))]
     fn request(
         &self,
+        py: Python<'_>,
         method: &str,
         url: String,
         headers: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
         body: Option<Vec<u8>>,
         json: Option<HashMap<String, String>>,
+        allow_redirects: bool,
     ) -> PyResult<PyResponse> {
         let final_url = append_params(&url, params.as_ref());
         let mut all_headers = self.build_default_headers(&final_url);
@@ -270,18 +278,20 @@ impl PyBrowserSession {
         let verify = self.verify;
         let ca_bundle = self.ca_bundle.clone();
 
-        let result = self
-            .runtime
-            .block_on(http_client::execute(
-                method,
-                &final_url,
-                all_headers,
-                body,
-                &profile,
-                proxy.as_deref(),
-                verify,
-                ca_bundle.as_deref(),
-            ))
+        let result = py
+            .allow_threads(|| {
+                self.runtime.block_on(http_client::execute(
+                    method,
+                    &final_url,
+                    all_headers,
+                    body,
+                    &profile,
+                    proxy.as_deref(),
+                    verify,
+                    ca_bundle.as_deref(),
+                    allow_redirects,
+                ))
+            })
             .map_err(|e| Into::<pyo3::PyErr>::into(e))?;
 
         // Persist cookies from all responses (redirects + final) into session cookie store
@@ -458,18 +468,19 @@ impl PyAsyncBrowserSession {
         })
     }
 
-    #[pyo3(signature = (url, headers=None, params=None))]
+    #[pyo3(signature = (url, headers=None, params=None, allow_redirects=true))]
     fn get<'py>(
         &self,
         py: Python<'py>,
         url: String,
         headers: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
+        allow_redirects: bool,
     ) -> PyResult<Bound<'py, PyAny>> {
-        self.do_request(py, "GET".to_owned(), url, headers, params, None, None)
+        self.do_request(py, "GET".to_owned(), url, headers, params, None, None, allow_redirects)
     }
 
-    #[pyo3(signature = (url, headers=None, params=None, data=None, json=None))]
+    #[pyo3(signature = (url, headers=None, params=None, data=None, json=None, allow_redirects=true))]
     fn post<'py>(
         &self,
         py: Python<'py>,
@@ -478,11 +489,12 @@ impl PyAsyncBrowserSession {
         params: Option<HashMap<String, String>>,
         data: Option<Vec<u8>>,
         json: Option<HashMap<String, String>>,
+        allow_redirects: bool,
     ) -> PyResult<Bound<'py, PyAny>> {
-        self.do_request(py, "POST".to_owned(), url, headers, params, data, json)
+        self.do_request(py, "POST".to_owned(), url, headers, params, data, json, allow_redirects)
     }
 
-    #[pyo3(signature = (method, url, headers=None, params=None, body=None, json=None))]
+    #[pyo3(signature = (method, url, headers=None, params=None, body=None, json=None, allow_redirects=true))]
     fn request<'py>(
         &self,
         py: Python<'py>,
@@ -492,8 +504,9 @@ impl PyAsyncBrowserSession {
         params: Option<HashMap<String, String>>,
         body: Option<Vec<u8>>,
         json: Option<HashMap<String, String>>,
+        allow_redirects: bool,
     ) -> PyResult<Bound<'py, PyAny>> {
-        self.do_request(py, method, url, headers, params, body, json)
+        self.do_request(py, method, url, headers, params, body, json, allow_redirects)
     }
 
     fn update_cookies(&self, cookies: HashMap<String, String>) {
@@ -533,6 +546,7 @@ impl PyAsyncBrowserSession {
         params: Option<HashMap<String, String>>,
         body: Option<Vec<u8>>,
         json: Option<HashMap<String, String>>,
+        allow_redirects: bool,
     ) -> PyResult<Bound<'py, PyAny>> {
         let final_url = append_params(&url, params.as_ref());
         let mut all_headers = self.build_default_headers_async(&final_url);
@@ -587,6 +601,7 @@ impl PyAsyncBrowserSession {
                 proxy.as_deref(),
                 verify,
                 ca_bundle.as_deref(),
+                allow_redirects,
             )
             .await
             .map_err(|e| Into::<pyo3::PyErr>::into(e))?;

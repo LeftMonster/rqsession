@@ -1,7 +1,7 @@
 # rust_session — AsyncBrowserSession 异步版本
 
 **创建时间：** 2026-04-28  
-**对应代码版本：** 0.3.2（async 特性在此版本上开发，尚未 bump 版本号）
+**最后更新：** 2026-06-12（v0.4.6）
 
 ---
 
@@ -136,6 +136,9 @@ resp = await s.post(url, data=b"raw bytes")
 # 通用请求
 resp = await s.request("PUT", url, headers={"x-token": "abc"}, json={})
 
+# allow_redirects（默认 True）
+resp = await s.get(url, allow_redirects=False)  # 停在 3xx，Set-Cookie 仍入 session
+
 # Cookie 管理
 s.update_cookies({"session_id": "xyz"})  # 同步方法，设置后续请求自动携带
 
@@ -156,6 +159,17 @@ AsyncBrowserSession(
 
 Response 对象与同步版本完全一致（`status_code`、`text`、`content`、`headers`、`json()`、`ok`、`raise_for_status()`）。
 
+Session 附加属性：
+
+```python
+s.headers      # dict — 完整实际发送 headers（profile 基线 + session_headers + cookie header）
+s.cookies      # dict — 当前 session cookies
+s.profile_name # str  — 当前 profile 名称
+
+# 修改接口（只读属性 headers 返回副本，不能直接修改；用以下方法变更）
+s.update_headers({"x-custom": "value"})
+s.update_cookies({"session_id": "abc"})
+
 ---
 
 ## Windows 注意事项
@@ -172,6 +186,40 @@ asyncio.run(main())
 ```
 
 实测（Windows 10 + Python 3.12）使用默认事件循环也能正常工作，但遇到 "Event loop is closed" 类错误时第一步就改这个。
+
+---
+
+## ⚠️ 已知 Bug 修复
+
+### v0.4.3 — 多协程共享实例死锁
+
+**症状：** 大量协程共用同一个 `AsyncBrowserSession` 实例时程序永久卡死。
+
+**根因：** `do_request` 的 async block 中，`session_cookies` MutexGuard `sc` 在声明后没有显式 drop，在 `Python::with_gil()` 调用时仍持有锁。
+
+- Tokio 线程：持有 `session_cookies` mutex → `Python::with_gil()` → 等待 GIL
+- Python 线程（持有 GIL）：调用另一协程的 `do_request` → `build_default_headers_async()` → `session_cookies.lock()` → 等待 mutex
+- → **互相等待，永久卡死**
+
+**修复：** 在 `src/lib.rs` 用 `{}` 作用域限定 MutexGuard，确保 mutex 在 `Python::with_gil()` 之前释放。
+
+**通用规则（PyO3 项目）：** 在 Tokio async 任务中，凡调用 `Python::with_gil()` 前，必须确保所有 `std::sync::Mutex` 锁已经释放。
+
+### v0.4.6 — sync BrowserSession HTTP 请求永久挂死
+
+**症状：** `BrowserSession` 对明文 HTTP 端点的所有请求（含 `allow_redirects=False`）永久卡死；HTTPS 以前碰巧能工作。
+
+**根因：** `PyBrowserSession::request` 持有 Python GIL 调用 `block_on`。Windows IOCP 需要在当前线程上投递 I/O 完成事件，而 GIL 导致 Tokio 的 I/O 驱动无法完成事件循环轮转，`TcpStream::connect` 永远不返回。
+
+**修复：** 为 `get` / `post` / `request` 加 `py: Python<'_>` 参数，用 `py.allow_threads(|| { runtime.block_on(...) })` 包裹，在 I/O 期间释放 GIL。Python API 签名不变（`py` 由 PyO3 自动注入，对调用方不可见）。
+
+### v0.4.6 — HTTP/1.1 请求行 absolute-form 错误
+
+**症状：** 直连时发出 `GET http://host/path HTTP/1.1`（absolute-form），只有接受这种格式的服务端才正常响应；标准服务器会路由错误或返回 404/400。
+
+**根因：** `build_request` 直接把完整 `Uri` 写入请求行，而 RFC 7230 规定非代理直连必须用 origin-form（`GET /path HTTP/1.1`）。
+
+**修复：** 改用 `uri.path_and_query().as_str()` 作为请求行目标。不影响 TLS 指纹（TLS 握手在 HTTP 层之前完成）。
 
 ---
 

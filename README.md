@@ -170,6 +170,10 @@ resp = s.request("PUT", url, headers={...}, json={...})
 # Async versions — same signature, add `await`
 resp = await s.get(url)
 resp = await s.post(url, json={...})
+
+# Disable redirect following (default: allow_redirects=True)
+resp = s.get(url, allow_redirects=False)   # returns the 3xx directly
+resp = await s.get(url, allow_redirects=False)
 ```
 
 ### Response object
