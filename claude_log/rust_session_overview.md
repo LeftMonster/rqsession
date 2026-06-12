@@ -1,6 +1,6 @@
 # rust_session — 纯 Rust PyO3 TLS 指纹模块
 
-**版本：** 0.4.1  
+**版本：** 0.4.6（最后更新 2026-06-12）  
 **创建时间：** 2026-04-27  
 **对应会话：** cd9fae2a（前半）+ 当前会话
 
@@ -138,10 +138,10 @@ s = BrowserSession(Chrome120)
 s = BrowserSession(Firefox133, proxy="http://127.0.0.1:7890")
 s = BrowserSession(Chrome120, verify=False)
 
-# 请求方法
-resp = s.get(url, headers={}, params={})
-resp = s.post(url, headers={}, params={}, data=b"...", json={})
-resp = s.request(method, url, headers={}, params={}, body=b"...", json={})
+# 请求方法（allow_redirects 默认 True，传 False 停在首个 3xx 直接返回）
+resp = s.get(url, headers={}, params={}, allow_redirects=True)
+resp = s.post(url, headers={}, params={}, data=b"...", json={}, allow_redirects=True)
+resp = s.request(method, url, headers={}, params={}, body=b"...", json={}, allow_redirects=True)
 
 # 响应对象（兼容 requests.Response 风格）
 resp.status_code   # int
@@ -181,6 +181,10 @@ async def main():
         )
 
 asyncio.run(main())
+
+# allow_redirects（同步 / 异步相同）
+resp = s.get(url, allow_redirects=False)   # 停在 3xx，不跟随；Set-Cookie 仍入 session
+resp = s.get(url, allow_redirects=True)    # 默认，跟随所有重定向
 
 # 构造参数（同步 / 异步相同）：proxy、verify、ca_bundle
 

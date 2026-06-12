@@ -170,6 +170,10 @@ resp = s.request("PUT", url, headers={...}, json={...})
 # 异步版本 — 签名相同，加 await
 resp = await s.get(url)
 resp = await s.post(url, json={...})
+
+# 禁止跟随重定向（默认 allow_redirects=True）
+resp = s.get(url, allow_redirects=False)        # 直接返回 3xx
+resp = await s.get(url, allow_redirects=False)
 ```
 
 ### 响应对象
