@@ -16,6 +16,24 @@ def _detect_ca_bundle() -> str | None:
     return None
 
 
+def _prepare_headers(
+    headers: dict | None,
+    remove_headers: list[str] | None,
+) -> tuple[dict | None, list[str] | None]:
+    remove = list(remove_headers or [])
+    if not headers:
+        return headers, remove or None
+
+    clean_headers = {}
+    for key, value in headers.items():
+        if value is None:
+            remove.append(str(key))
+        else:
+            clean_headers[key] = value
+
+    return clean_headers or None, remove or None
+
+
 class BrowserSession:
     """
     Synchronous browser-impersonating HTTP session.
@@ -54,8 +72,16 @@ class BrowserSession:
         headers: dict | None = None,
         params: dict | None = None,
         allow_redirects: bool = True,
+        remove_headers: list[str] | None = None,
     ):
-        return self._session.get(url, headers=headers, params=params, allow_redirects=allow_redirects)
+        headers, remove_headers = _prepare_headers(headers, remove_headers)
+        return self._session.get(
+            url,
+            headers=headers,
+            params=params,
+            allow_redirects=allow_redirects,
+            remove_headers=remove_headers,
+        )
 
     def post(
         self,
@@ -66,6 +92,7 @@ class BrowserSession:
         data: bytes | None = None,
         json: Any = None,
         allow_redirects: bool = True,
+        remove_headers: list[str] | None = None,
     ):
         if json is not None and data is None:
             data = _json.dumps(json).encode()
@@ -74,7 +101,16 @@ class BrowserSession:
             elif "content-type" not in {k.lower() for k in headers}:
                 headers = {**headers, "content-type": "application/json"}
             json = None
-        return self._session.post(url, headers=headers, params=params, data=data, json=json, allow_redirects=allow_redirects)
+        headers, remove_headers = _prepare_headers(headers, remove_headers)
+        return self._session.post(
+            url,
+            headers=headers,
+            params=params,
+            data=data,
+            json=json,
+            allow_redirects=allow_redirects,
+            remove_headers=remove_headers,
+        )
 
     def request(
         self,
@@ -86,6 +122,7 @@ class BrowserSession:
         body: bytes | None = None,
         json: Any = None,
         allow_redirects: bool = True,
+        remove_headers: list[str] | None = None,
     ):
         if json is not None and body is None:
             body = _json.dumps(json).encode()
@@ -94,8 +131,16 @@ class BrowserSession:
             elif "content-type" not in {k.lower() for k in headers}:
                 headers = {**headers, "content-type": "application/json"}
             json = None
+        headers, remove_headers = _prepare_headers(headers, remove_headers)
         return self._session.request(
-            method, url, headers=headers, params=params, body=body, json=json, allow_redirects=allow_redirects
+            method,
+            url,
+            headers=headers,
+            params=params,
+            body=body,
+            json=json,
+            allow_redirects=allow_redirects,
+            remove_headers=remove_headers,
         )
 
     # ── Context manager ───────────────────────────────────────────────────────
@@ -113,6 +158,12 @@ class BrowserSession:
 
     def update_headers(self, headers: dict[str, str]) -> None:
         self._session.update_headers(headers)
+
+    def remove_header(self, name: str) -> None:
+        self._session.remove_header(name)
+
+    def remove_headers(self, names: list[str]) -> None:
+        self._session.remove_headers(names)
 
     @property
     def cookies(self) -> dict[str, str]:
