@@ -61,7 +61,7 @@ class _ProfileProxy:
 
 AndroidChrome114 = _ProfileProxy("chrome114_android")
 MacosChrome140 = _ProfileProxy("chrome140_macos")
-Chrome147 = _ProfileProxy("chrome147_windows")
+Chromium147 = _ProfileProxy("chromium147")
 Chrome138 = _ProfileProxy("chrome138_windows")
 Chrome120 = _ProfileProxy("chrome120_windows")
 Chrome119 = _ProfileProxy("chrome119_windows")

@@ -3,7 +3,7 @@ import aiohttp
 import requests
 
 from rqsession.rust_session import BrowserSession, Chrome120, Chrome138, Firefox133, Safari17, Edge141, Edge142, Edge147, Firefox146, Py37Aiohttp381, Tor128, AndroidChrome114,\
-    MacosChrome140, AsyncBrowserSession,Android10Edge143, Chrome147
+    MacosChrome140, AsyncBrowserSession,Android10Edge143, Chromium147
 from curl_cffi.requests import AsyncSession
 
 
