@@ -332,7 +332,7 @@ impl PyBrowserSession {
 }
 
 impl PyBrowserSession {
-    fn build_default_headers(&self, _url: &str) -> Vec<(String, String)> {
+    fn build_default_headers(&self, url: &str) -> Vec<(String, String)> {
         let p = &*self.profile;
 
         // Map a header name to its value from the profile
@@ -347,6 +347,10 @@ impl PyBrowserSession {
         };
 
         let mut out: Vec<(String, String)> = Vec::new();
+
+        if let Some(host) = host_header_value(url) {
+            out.push(("host".to_owned(), host));
+        }
 
         if p.headers.order.is_empty() {
             // Fallback: no order defined, emit the four base headers
@@ -405,6 +409,11 @@ fn append_params(url: &str, params: Option<&HashMap<String, String>>) -> String 
     } else {
         format!("{url}?{query}")
     }
+}
+
+fn host_header_value(url: &str) -> Option<String> {
+    let uri: http::Uri = url.parse().ok()?;
+    uri.authority().map(|authority| authority.as_str().to_owned())
 }
 
 fn encode_uri(s: &str) -> String {
@@ -621,7 +630,7 @@ impl PyAsyncBrowserSession {
         })
     }
 
-    fn build_default_headers_async(&self, _url: &str) -> Vec<(String, String)> {
+    fn build_default_headers_async(&self, url: &str) -> Vec<(String, String)> {
         let p = &*self.profile;
 
         let resolve = |name: &str| -> Option<String> {
@@ -635,6 +644,10 @@ impl PyAsyncBrowserSession {
         };
 
         let mut out: Vec<(String, String)> = Vec::new();
+
+        if let Some(host) = host_header_value(url) {
+            out.push(("host".to_owned(), host));
+        }
 
         if p.headers.order.is_empty() {
             out.push(("user-agent".to_owned(),      p.user_agent.clone()));
