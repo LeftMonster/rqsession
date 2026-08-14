@@ -88,21 +88,24 @@ asyncio.run(main())
 
 ## Built-in Browser Profiles
 
-| Import name | Browser | OS |
-|---|---|---|
-| `Chrome138` | Chrome 138 | Windows |
-| `Chrome120` | Chrome 120 | Windows |
-| `Chrome119` | Chrome 119 | Windows |
-| `Edge147` | Edge 147 | Windows |
-| `Edge142` | Edge 142 | Windows |
-| `Edge141` | Edge 141 | Windows |
-| `Firefox146` | Firefox 146 | Windows |
-| `Firefox133` | Firefox 133 | Windows |
-| `Tor128` | Tor Browser 128 | Windows |
-| `Safari17` | Safari 17 | macOS |
-| `MacosChrome140` | Chrome 140 | macOS |
-| `AndroidChrome114` | Chrome 114 | Android |
-| `Py37Aiohttp381` | Python aiohttp 3.8.1 | Windows |
+| Import name        | Browser              | OS |
+|--------------------|----------------------|---|
+| `Chromium147`      | Chromium 147         | Windows |
+| `Chrome138`        | Chrome 138           | Windows |
+| `Chrome120`        | Chrome 120           | Windows |
+| `Chrome119`        | Chrome 119           | Windows |
+| `Edge151`          | Edge 151             | Windows |
+| `Edge147`          | Edge 147             | Windows |
+| `Edge142`          | Edge 142             | Windows |
+| `Edge141`          | Edge 141             | Windows |
+| `Firefox146`       | Firefox 146          | Windows |
+| `Firefox133`       | Firefox 133          | Windows |
+| `Tor128`           | Tor Browser 128      | Windows |
+| `Safari17`         | Safari 17            | macOS |
+| `MacosChrome140`   | Chrome 140           | macOS |
+| `AndroidChrome114` | Chrome 114           | Android |
+| `Android10Edge143` | Chrome 143           | Android |
+| `Py37Aiohttp381`   | Python aiohttp 3.8.1 | Windows |
 
 ```python
 from rqsession.rust_session import (
