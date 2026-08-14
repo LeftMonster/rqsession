@@ -165,6 +165,7 @@ pub struct PyBrowserSession {
     ca_bundle: Option<String>,
     session_cookies: Arc<Mutex<HashMap<String, String>>>,
     session_headers: Arc<Mutex<HashMap<String, String>>>,
+    session_removed_headers: Arc<Mutex<Vec<String>>>,
     runtime: Arc<tokio::runtime::Runtime>,
 }
 
@@ -189,12 +190,13 @@ impl PyBrowserSession {
             ca_bundle,
             session_cookies: Arc::new(Mutex::new(HashMap::new())),
             session_headers: Arc::new(Mutex::new(HashMap::new())),
+            session_removed_headers: Arc::new(Mutex::new(Vec::new())),
             runtime: Arc::new(runtime),
         })
     }
 
     /// GET request.
-    #[pyo3(signature = (url, headers=None, params=None, allow_redirects=true))]
+    #[pyo3(signature = (url, headers=None, params=None, allow_redirects=true, remove_headers=None))]
     fn get(
         &self,
         py: Python<'_>,
@@ -202,12 +204,13 @@ impl PyBrowserSession {
         headers: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
         allow_redirects: bool,
+        remove_headers: Option<Vec<String>>,
     ) -> PyResult<PyResponse> {
-        self.request(py, "GET", url, headers, params, None, None, allow_redirects)
+        self.request(py, "GET", url, headers, params, None, None, allow_redirects, remove_headers)
     }
 
     /// POST request.
-    #[pyo3(signature = (url, headers=None, params=None, data=None, json=None, allow_redirects=true))]
+    #[pyo3(signature = (url, headers=None, params=None, data=None, json=None, allow_redirects=true, remove_headers=None))]
     fn post(
         &self,
         py: Python<'_>,
@@ -217,13 +220,14 @@ impl PyBrowserSession {
         data: Option<Vec<u8>>,
         json: Option<HashMap<String, String>>,
         allow_redirects: bool,
+        remove_headers: Option<Vec<String>>,
     ) -> PyResult<PyResponse> {
         let body = resolve_post_body(data, json)?;
-        self.request(py, "POST", url, headers, params, Some(body), None, allow_redirects)
+        self.request(py, "POST", url, headers, params, Some(body), None, allow_redirects, remove_headers)
     }
 
     /// Generic request.
-    #[pyo3(signature = (method, url, headers=None, params=None, body=None, json=None, allow_redirects=true))]
+    #[pyo3(signature = (method, url, headers=None, params=None, body=None, json=None, allow_redirects=true, remove_headers=None))]
     fn request(
         &self,
         py: Python<'_>,
@@ -234,9 +238,12 @@ impl PyBrowserSession {
         body: Option<Vec<u8>>,
         json: Option<HashMap<String, String>>,
         allow_redirects: bool,
+        remove_headers: Option<Vec<String>>,
     ) -> PyResult<PyResponse> {
         let final_url = append_params(&url, params.as_ref());
         let mut all_headers = self.build_default_headers(&final_url);
+
+        remove_header_names(&mut all_headers, remove_headers.as_ref());
 
         // Merge user-supplied headers: override existing entries (case-insensitive),
         // append new ones at the end so order stays deterministic.
@@ -310,8 +317,26 @@ impl PyBrowserSession {
 
     fn update_headers(&self, headers: HashMap<String, String>) {
         let mut sh = self.session_headers.lock().unwrap();
+        let mut removed = self.session_removed_headers.lock().unwrap();
         for (k, v) in headers {
-            sh.insert(k.to_lowercase(), v);
+            let key = k.to_lowercase();
+            removed.retain(|name| !name.eq_ignore_ascii_case(&key));
+            sh.insert(key, v);
+        }
+    }
+
+    fn remove_header(&self, name: String) {
+        self.remove_headers(vec![name]);
+    }
+
+    fn remove_headers(&self, names: Vec<String>) {
+        let mut sh = self.session_headers.lock().unwrap();
+        let mut removed = self.session_removed_headers.lock().unwrap();
+        for name in names {
+            sh.retain(|key, _| !key.eq_ignore_ascii_case(&name));
+            if !removed.iter().any(|existing| existing.eq_ignore_ascii_case(&name)) {
+                removed.push(name.to_lowercase());
+            }
         }
     }
 
@@ -366,6 +391,10 @@ impl PyBrowserSession {
             }
         }
 
+        let removed = self.session_removed_headers.lock().unwrap();
+        remove_header_names(&mut out, Some(&removed));
+        drop(removed);
+
         // Merge session-level headers after profile baseline
         let session_hdrs = self.session_headers.lock().unwrap();
         for (k, v) in session_hdrs.iter() {
@@ -416,6 +445,13 @@ fn host_header_value(url: &str) -> Option<String> {
     uri.authority().map(|authority| authority.as_str().to_owned())
 }
 
+fn remove_header_names(headers: &mut Vec<(String, String)>, names: Option<&Vec<String>>) {
+    let Some(names) = names else {
+        return;
+    };
+    headers.retain(|(key, _)| !names.iter().any(|name| key.eq_ignore_ascii_case(name)));
+}
+
 fn encode_uri(s: &str) -> String {
     // Minimal percent-encoding for query params
     s.chars()
@@ -455,6 +491,7 @@ pub struct PyAsyncBrowserSession {
     ca_bundle: Option<String>,
     session_cookies: Arc<Mutex<HashMap<String, String>>>,
     session_headers: Arc<Mutex<HashMap<String, String>>>,
+    session_removed_headers: Arc<Mutex<Vec<String>>>,
 }
 
 #[pymethods]
@@ -474,10 +511,11 @@ impl PyAsyncBrowserSession {
             ca_bundle,
             session_cookies: Arc::new(Mutex::new(HashMap::new())),
             session_headers: Arc::new(Mutex::new(HashMap::new())),
+            session_removed_headers: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
-    #[pyo3(signature = (url, headers=None, params=None, allow_redirects=true))]
+    #[pyo3(signature = (url, headers=None, params=None, allow_redirects=true, remove_headers=None))]
     fn get<'py>(
         &self,
         py: Python<'py>,
@@ -485,11 +523,12 @@ impl PyAsyncBrowserSession {
         headers: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
         allow_redirects: bool,
+        remove_headers: Option<Vec<String>>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        self.do_request(py, "GET".to_owned(), url, headers, params, None, None, allow_redirects)
+        self.do_request(py, "GET".to_owned(), url, headers, params, None, None, allow_redirects, remove_headers)
     }
 
-    #[pyo3(signature = (url, headers=None, params=None, data=None, json=None, allow_redirects=true))]
+    #[pyo3(signature = (url, headers=None, params=None, data=None, json=None, allow_redirects=true, remove_headers=None))]
     fn post<'py>(
         &self,
         py: Python<'py>,
@@ -499,11 +538,12 @@ impl PyAsyncBrowserSession {
         data: Option<Vec<u8>>,
         json: Option<HashMap<String, String>>,
         allow_redirects: bool,
+        remove_headers: Option<Vec<String>>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        self.do_request(py, "POST".to_owned(), url, headers, params, data, json, allow_redirects)
+        self.do_request(py, "POST".to_owned(), url, headers, params, data, json, allow_redirects, remove_headers)
     }
 
-    #[pyo3(signature = (method, url, headers=None, params=None, body=None, json=None, allow_redirects=true))]
+    #[pyo3(signature = (method, url, headers=None, params=None, body=None, json=None, allow_redirects=true, remove_headers=None))]
     fn request<'py>(
         &self,
         py: Python<'py>,
@@ -514,8 +554,9 @@ impl PyAsyncBrowserSession {
         body: Option<Vec<u8>>,
         json: Option<HashMap<String, String>>,
         allow_redirects: bool,
+        remove_headers: Option<Vec<String>>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        self.do_request(py, method, url, headers, params, body, json, allow_redirects)
+        self.do_request(py, method, url, headers, params, body, json, allow_redirects, remove_headers)
     }
 
     fn update_cookies(&self, cookies: HashMap<String, String>) {
@@ -524,8 +565,26 @@ impl PyAsyncBrowserSession {
 
     fn update_headers(&self, headers: HashMap<String, String>) {
         let mut sh = self.session_headers.lock().unwrap();
+        let mut removed = self.session_removed_headers.lock().unwrap();
         for (k, v) in headers {
-            sh.insert(k.to_lowercase(), v);
+            let key = k.to_lowercase();
+            removed.retain(|name| !name.eq_ignore_ascii_case(&key));
+            sh.insert(key, v);
+        }
+    }
+
+    fn remove_header(&self, name: String) {
+        self.remove_headers(vec![name]);
+    }
+
+    fn remove_headers(&self, names: Vec<String>) {
+        let mut sh = self.session_headers.lock().unwrap();
+        let mut removed = self.session_removed_headers.lock().unwrap();
+        for name in names {
+            sh.retain(|key, _| !key.eq_ignore_ascii_case(&name));
+            if !removed.iter().any(|existing| existing.eq_ignore_ascii_case(&name)) {
+                removed.push(name.to_lowercase());
+            }
         }
     }
 
@@ -556,9 +615,12 @@ impl PyAsyncBrowserSession {
         body: Option<Vec<u8>>,
         json: Option<HashMap<String, String>>,
         allow_redirects: bool,
+        remove_headers: Option<Vec<String>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let final_url = append_params(&url, params.as_ref());
         let mut all_headers = self.build_default_headers_async(&final_url);
+
+        remove_header_names(&mut all_headers, remove_headers.as_ref());
 
         if let Some(extra) = headers {
             for (k, v) in extra {
@@ -661,6 +723,10 @@ impl PyAsyncBrowserSession {
                 }
             }
         }
+
+        let removed = self.session_removed_headers.lock().unwrap();
+        remove_header_names(&mut out, Some(&removed));
+        drop(removed);
 
         // Merge session-level headers after profile baseline
         let session_hdrs = self.session_headers.lock().unwrap();

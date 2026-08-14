@@ -174,7 +174,22 @@ resp = await s.post(url, json={...})
 # Disable redirect following (default: allow_redirects=True)
 resp = s.get(url, allow_redirects=False)   # returns the 3xx directly
 resp = await s.get(url, allow_redirects=False)
+
+# Remove profile/session default headers for one request
+resp = s.get(
+    url,
+    remove_headers=["sec-fetch-user", "upgrade-insecure-requests"],
+)
+
+# Equivalent: None means "do not send this header"
+resp = s.get(url, headers={"sec-fetch-user": None})
+
+# Remove defaults for all later requests on this session
+s.remove_headers(["sec-fetch-user", "upgrade-insecure-requests"])
 ```
+
+`remove_headers` is case-insensitive and applies before the per-request `headers` merge, so an explicit `headers={...}` value can add the same header back for that request.
+Do not use an empty string when a server requires the header to be absent; use `remove_headers` or `None`.
 
 ### Response object
 
